@@ -1,0 +1,17 @@
+{
+    "filewatcher.commands": [
+        {
+            "match": "\\.soul*",
+            "isAsync": true,
+            "cmd": "soul generate --graph --output=${workspaceRoot}\\Source\\soul\\graph\\graph.html ${workspaceRoot}\\Source\\soul\\SineSynth.soulpatch",
+            "event": "onFileChange"
+        },
+        {
+            "match": "\\.soul*",
+            "isAsync": true,
+            "cmd": "soul generate --cpp --output=${workspaceRoot}\\Source\\soulpatch.cpp ${workspaceRoot}\\Source\\soul\\SineSynth.soulpatch",
+            "event": "onFileChange"
+        }
+    ],
+    "powershell.codeFormatting.addWhitespaceAroundPipe": true
+}

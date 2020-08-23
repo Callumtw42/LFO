@@ -1,0 +1,14 @@
+{
+    "soulPatchV1": {
+        "ID": "callum.level",
+        "version": "0.1",
+        "name": "Level",
+        "description": "simple level",
+        "category": "effect",
+        "manufacturer": "soul-web-playground",
+        "isInstrument": false,
+        "source": [
+            "level.soul"
+        ]
+    }
+}

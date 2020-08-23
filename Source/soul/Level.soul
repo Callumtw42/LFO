@@ -1,0 +1,21 @@
+graph Level  [[ main ]]
+{
+    input smoothedGain.volume [[ label: "Volume", min: -40, max: 0, init: -6, step: 1, unit:"dB"]];
+    input stream float<2> audioIn;
+    output stream float<2> audioOut;
+
+    let
+    {
+        smoothedGain = soul::gain::SmoothedGainParameter (0.01f);
+        gainProcessor = soul::gain::DynamicGain (float<2>);
+    } 
+
+    connection
+    {
+        smoothedGain.gain -> gainProcessor.gain;
+        audioIn -> gainProcessor.in;
+        gainProcessor.out -> audioOut; 
+    }
+}
+
+
