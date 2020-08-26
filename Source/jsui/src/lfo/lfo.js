@@ -3,16 +3,17 @@ import { clamp } from "../functions"
 import {
   Image,
   View,
-  EventBridge
+  EventBridge,
 } from 'juce-blueprint';
 import Mouse from "./mouse"
 import { Node, NodeList } from "./nodelist"
 import Slider from "../slider/slider"
 import Dial from "../slider/dial"
 import Button from "../button"
+import PlayHead from "./playhead"
 
-const boxHeight = 200;
-const boxWidth = 300;
+export const boxHeight = 200;
+export const boxWidth = 300;
 export const plotHeight = (3 / 4) * boxHeight;
 export const plotWidth = boxWidth;
 export const pointRadius = 4;
@@ -30,9 +31,7 @@ class LFO extends Component {
     this._onMouseDrag = this._onMouseDrag.bind(this);
     this._onMouseUp = this._onMouseUp.bind(this);
     this._onMouseDoubleClick = this._onMouseDoubleClick.bind(this);
-    this._onIndexUpdated = this._onIndexUpdated.bind(this);
     this.initialised = true;
-    EventBridge.addListener('updateCurrentIndex', this._onIndexUpdated);
 
     this.state = {
       points: new NodeList(
@@ -48,16 +47,10 @@ class LFO extends Component {
     }
   }
 
-  _onIndexUpdated(index) {
-    // global.log(index);
-    this.setState({ playhead: index })
-  }
-
   componentDidMount() {
     this.state.points.insertAfter(0,
       new Node(plotWidth / 2, plotHeight, pointRadius, false)
     )
-    this.renderPlotComponents();
     this.setState(this.state);
   }
 
@@ -94,7 +87,6 @@ class LFO extends Component {
         new Node(mouseX, mouseY, pointRadius, false)
       )
     }
-    this.renderPlotComponents();
     this.setState(this.state);
   }
 
@@ -116,7 +108,6 @@ class LFO extends Component {
         break;
       }
     }
-    this.renderPlotComponents();
     this.setState(this.state);
   }
 
@@ -182,17 +173,6 @@ class LFO extends Component {
     }
   }
 
-  playhead() {
-    const { playhead } = this.state;
-    const playX = (playhead / plotResolution) * plotWidth;
-    return (
-      ` < svg width="${boxWidth}" height="${boxWidth}" viewBox="0 0 0 0" xmlns="http://www.w3.org/2000/svg" >
-          <path d="M${playX} ${0} L${playX} ${plotHeight} Z" stroke="${"#3ade3a"}" stroke-width="1"/>
-        </svg>
-    `
-    )
-  }
-
   renderPlotComponents() {
     this.generatePlot();
     const { points, plot, buttonColor } = this.state;
@@ -200,15 +180,15 @@ class LFO extends Component {
     // const playhead = this.playhead();
 
     const values = [];
-    for (let i = 0; i < plotResolution - 1; i++) {
-      const start = {
-        x: (i / plotResolution) * plotWidth,
-        y: plot[i]
-      }
-      values.push(`
-        <circle cx="${start.x}" cy="${start.y}" r="${0.5}" fill="${"#3ade3a"}" />
-      `)
-    }
+    // for (let i = 0; i < plotResolution - 1; i++) {
+    //   const start = {
+    //     x: (i / plotResolution) * plotWidth,
+    //     y: plot[i]
+    //   }
+    //   values.push(`
+    //     <circle cx="${start.x}" cy="${start.y}" r="${0.5}" fill="${"#3ade3a"}" />
+    //   `)
+    // }
 
     const circles = points.map((point, index) => {
       if (point.rightNeighbour) {
@@ -217,11 +197,11 @@ class LFO extends Component {
         const { ctrl1, ctrl2 } = point.path.getControlPoints(start, end);
         const curveMod = point.path.ctrlParam;
         const curvePoints = [];
-        for (let p of point.path.curvePoints) {
-          curvePoints.push(
-            `<circle cx="${p.x}" cy="${p.y}" r="${1}" fill="${"#ff2008"}" />`
-          )
-        }
+        // for (let p of point.path.curvePoints) {
+        //   curvePoints.push(
+        //     `<circle cx="${p.x}" cy="${p.y}" r="${1}" fill="${"#ff2008"}" />`
+        //   )
+        // }
         // global.log(curveMod.x);
 
         return `
@@ -229,14 +209,13 @@ class LFO extends Component {
         <circle cx="${curveMod.x}" cy="${curveMod.y}" r="${3}" fill="${"#FFEF08"}" />
         <circle cx="${ctrl1.x}" cy="${ctrl1.y}" r="${2}" fill="${"#D519DA"}" />
         <circle cx="${ctrl2.x}" cy="${ctrl2.y}" r="${1.5}" fill="${"#FFFFFF"}" />
-        ${curvePoints}
         `
       }
       else return `< circle cx = "${point.x}" cy = "${point.y}" r = "${point.radius}" fill = "${buttonColor}" />
           `
     })
 
-    this.plotComponents = {
+    return {
       gridX: gridX,
       gridY: gridY,
       circles: circles,
@@ -245,7 +224,7 @@ class LFO extends Component {
   }
 
   _svg() {
-    const { gridX, gridY, circles, values } = this.plotComponents;
+    const { gridX, gridY, circles, values } = this.renderPlotComponents();
     const img =
       `
           < svg width = "${boxWidth}" height = "${boxWidth}" viewBox = "0 0 0 0" xmlns = "http://www.w3.org/2000/svg" >
@@ -268,7 +247,6 @@ class LFO extends Component {
 
   setGridRes(value) {
     this.state.gridRes = value;
-    this.renderPlotComponents();
     this.setState(this.state)
   }
 
@@ -288,17 +266,17 @@ class LFO extends Component {
     if (this.props.paramId == this.props.activeLFO) {
       return (
         <View {...styles.container}>
-          {/* <Image
+          <Image
             onMouseDown={this._onMouseDown}
             onMouseUp={this._onMouseUp}
             onMouseDrag={this._onMouseDrag}
             onMouseDoubleClick={this._onMouseDoubleClick}
-            {...styles.plot} source={this._svg()} /> */}
-          <Image {...styles.playhead} source={this.playhead()} />
+            {...styles.plot} source={this._svg()} />
+          {/* <PlayHead {...styles.plot} /> */}
           <View {...styles.dials}>
-            <Dial {...styles.dial} value={gridRes} start={1} end={16} step={1} label={"Grid"} callBack={this.setGridRes.bind(this)} ></Dial>
-            <Dial {...styles.dial} value={speed} start={4} end={1 / 64} step={-2} skew={0.5} label={"Speed"} callBack={this.setSpeed.bind(this)} ></Dial>
-            <Button {...styles.button}{...this.props} label={"Trig"} callBack={this.setMode.bind(this)} mode={this.state.mode} />
+            {/* <Dial {...styles.dial} value={gridRes} start={1} end={16} step={1} label={"Grid"} callBack={this.setGridRes.bind(this)} ></Dial>
+            <Dial {...styles.dial} value={speed} start={4} end={1 / 64} step={-2} skew={0.5} label={"Speed"} callBack={this.setSpeed.bind(this)} ></Dial> */}
+            <Button {...styles.button} label={"Trig"} callBack={this.setMode.bind(this)} mode={this.state.mode} />
           </View>
         </View >
       );
@@ -312,10 +290,6 @@ let styles = {
     'height': plotHeight,
     'width': plotWidth,
     'interceptClickEvents': true,
-  },
-  playhead: {
-    'height': plotHeight,
-    'width': plotWidth,
   },
   // slider: {
   //   'width': boxWidth,

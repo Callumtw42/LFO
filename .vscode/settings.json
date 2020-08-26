@@ -13,5 +13,6 @@
             "event": "onFileChange"
         }
     ],
-    "powershell.codeFormatting.addWhitespaceAroundPipe": true
+    "powershell.codeFormatting.addWhitespaceAroundPipe": true,
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

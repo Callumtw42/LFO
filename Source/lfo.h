@@ -20,16 +20,22 @@ inline AudioPlayHead::CurrentPositionInfo playheadPosition;
 inline double bpm = 128;
 static const int LFORES = 1024;
 
-class LFO
+class LFO : Timer
 {
 public:
 	LFO(AudioProcessorParameter* endPoint)
 		:endPoint(endPoint)
 	{
 		plot.fill(0);
+		Timer::startTimer(16);
 	};
 
 	~LFO() {};
+
+	void timerCallback() override
+	{
+		callback(currentIndex);
+	};
 
 	void start()
 	{
@@ -100,13 +106,15 @@ public:
 		double microsecondsElapsed = elapsedTime.count() * 1000000;
 		double barsElapsed = microsecondsElapsed / barLength;
 		double intervalsElapsed = barsElapsed / speed;
-		int index = std::round(intervalsElapsed * LFORES);
-		if (index - currentIndex > 32)
-		{
-			callback(index % LFORES);
-			currentIndex = index;
-		}
-		double lfoVal = plot[index % LFORES];
+		int rounded = std::round(intervalsElapsed * LFORES);
+		int index = rounded % LFORES;
+		currentIndex = index;
+		//if (index - currentIndex > 32)
+		//{
+			//callback(index % LFORES);
+			//currentIndex = index;
+		//}
+		double lfoVal = plot[index];
 		double outVal = std::clamp(lfoVal, 0.0, 1.0);
 		//Logger::writeToLog(juce::String(outVal));
 		endPoint->setValue(outVal);

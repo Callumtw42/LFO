@@ -3,13 +3,13 @@
 juce::String message;
 
 Editor::Editor(Processor& p)
-	: AudioProcessorEditor(&p), processor(&p)
+	: AudioProcessorEditor(&p), processor(&p), ui(new UI(p))
 {
 	constrainer.setMinimumWidth(WIDTH);
-	constrainer.setMinimumHeight(HEIGHT);
+	constrainer.setMinimumHeight(HEIGHT * 2);
 	setConstrainer(&constrainer);
 	setResizable(true, true);
-	setSize(WIDTH, HEIGHT);
+	setSize(WIDTH, HEIGHT * 2);
 
 	juce::File UIPath("C:\\Users\\callu\\Desktop\\projects\\LFO\\Source\\jsui\\build\\js\\main.js");
 	jassert(UIPath.existsAsFile());
@@ -21,7 +21,8 @@ Editor::Editor(Processor& p)
 	appRoot.evaluate(UIPath);
 	connectLFOCallback();
 	processor->lfo->start();
-	addAndMakeVisible(appRoot);
+	//addAndMakeVisible(appRoot);
+	addAndMakeVisible(ui);
 }
 
 Editor::~Editor() { }
@@ -30,15 +31,20 @@ void Editor::connectLFOCallback()
 {
 	processor->lfo->callback = [&](int index)
 	{
-		Component::SafePointer<blueprint::ReactApplicationRoot> safeAppRoot(&appRoot);
-
-		juce::MessageManager::callAsync([=]() {
-			if (blueprint::ReactApplicationRoot* root = safeAppRoot.getComponent())
-				root->dispatchEvent("updateCurrentIndex",
-					index
-				);
-			});
+		float position = (float)index / LFORES;
+		ui->plot.playhead.setPosition(position);
 	};
+	//processor->lfo->callback = [&](int index)
+	//{
+	//	Component::SafePointer<blueprint::ReactApplicationRoot> safeAppRoot(&appRoot);
+
+	//	juce::MessageManager::callAsync([=]() {
+	//		if (blueprint::ReactApplicationRoot* root = safeAppRoot.getComponent())
+	//			root->dispatchEvent("updateCurrentIndex",
+	//				index
+	//			);
+	//		});
+	//};
 }
 
 void Editor::bindNativeCallbacks()
@@ -143,7 +149,10 @@ void Editor::parameterValueChanged(int parameterIndex, float newValue)
 
 void Editor::resized()
 {
-	appRoot.setBounds(getLocalBounds());
+	const float width = getWidth(), height = getHeight();
+	appRoot.setBounds(Rectangle<int>(0, 0, width, height / 2));
+	ui->setBounds(Rectangle<int>(0, HEIGHT, width, height / 2));
+
 	errorText.setBounds(getLocalBounds());
 	errorText.centreWithSize(getParentHeight(), getParentWidth());
 }
