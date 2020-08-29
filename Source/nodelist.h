@@ -11,7 +11,6 @@
 #pragma once
 #include <JuceHeader.h>
 #include "utils.h"
-
 const float POINT_RADIUS = 0.04f;
 const int VALUES_PER_CURVE_POINT = 4;
 
@@ -58,55 +57,44 @@ struct Edge : public Component
 	Node* end;
 	Ptr<Array<float>> plot = std::make_unique<Array<float>>();
 	Ptr<Array<CurvePoint*>> curvePoints = std::make_unique <Array<CurvePoint*>>();
-
-//private:
-//	float plotWidth = (float)getParentWidth();
 };
 
 struct Node :public Component
 {
 	Node(float x, float y, float radius, bool isBound);
-	void move(float x, float y);
+	void move(int x, int y);
 	void paint(Graphics& g) override;
 	void resized() override;
+	void mouseDrag(const MouseEvent& event) override;
+	void updatePosition();
+	void setX(int x);
+	void setY(int y);
 
 	std::unique_ptr<Edge> path;
 	Node* rightNeighbour;
 	Node* leftNeighbour;
-	float x;
-	float y;
+	int x;
+	int y;
+	float relX;
+	float relY;
 	float radius;
 	bool isSelected;
 	bool isBound;
-};
 
-struct Thing : Component
-{
-	void paint(Graphics& g) override
-	{
-		g.setColour(Colours::red);
-		g.fillRect(0, 0, getHeight(), getWidth());
-	};	
+private:
+	int parentHeight = 0;
+	int parentWidth = 0;
 };
 
 struct NodeList : public Component, Array<Node*>
 {
-	NodeList(Node& head, Node& tail);
+	NodeList();
 	void insertAfter(int index, Node& node);
 	void removeNode(int index);
 	void resized() override;
-	void paint(Graphics& g) override;
 
-	float height = 0.0f;
-	float width = 0.0f;
-	Thing* thing;
-
-	//forEach(...args) 
-	//indexOf(...args) 
-	//splice(...args) 
-	//map(...args) 
-	//get()
-	//juce::Array<Node*> nodes;
+	Node head = Node(0, 1, POINT_RADIUS, true);
+	Node tail = Node(1, 1, POINT_RADIUS, true);
 };
 
 

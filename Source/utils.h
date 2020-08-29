@@ -10,8 +10,13 @@
 
 #pragma once
 #include <memory>
+#include <juceheader.h>
 
 template<typename T>
 using Ptr = std::unique_ptr<T>;
 
-
+template<typename T>
+void dbg(T v)
+{
+	Logger::writeToLog(juce::String(v));
+}

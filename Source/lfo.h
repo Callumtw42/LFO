@@ -12,6 +12,7 @@
 
 #pragma once
 #define _USE_MATH_DEFINES
+#include <array>
 #include <JuceHeader.h>
 #include <math.h>
 #include <functional>

@@ -10,10 +10,8 @@
 
 #include "nodelist.h"
 
-NodeList::NodeList(Node& head, Node& tail)
+NodeList::NodeList()
 {
-	this->thing = new Thing();
-	addAndMakeVisible(thing);
 	head.path = std::make_unique<Edge>(head, tail);
 	addAndMakeVisible(&head);
 	add(&head);
@@ -55,29 +53,17 @@ void NodeList::removeNode(int index) {
 
 void NodeList::resized()
 {
-	height = getHeight();
-	width = getWidth();
+	int height = getHeight();
+	int width = getWidth();
 
 	for (int i = 0; i < size(); ++i)
 	{
 		auto* node = getReference(i);
-		auto radius = height * POINT_RADIUS;
-		auto diameter = radius * 2;
-		auto x = std::round(node->x * width) - radius;
-		auto y = std::round(node->y * height) - radius;
-		node->setBounds(x, y, diameter, diameter);
+		node->updatePosition();
 	}
 
-	//thing->setBounds(0, 0, height, width);
-
 }
 
-void NodeList::paint(Graphics& g)
-{
-
-	//g.setColour(Colours::red);
-	//g.drawRect(0.0f, 0.0f, width, height);
-}
 
 //forEach(...args) {
 	//return this.nodes.forEach(...args);
