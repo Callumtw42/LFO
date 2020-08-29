@@ -12,12 +12,18 @@
 #include<juceheader.h>
 
 #include "playhead.h"
+#include "nodelist.h"
 
 struct Plot : public Component {
 
 	Plot()
 	{
 		addAndMakeVisible(playhead);
+		auto* startNode = new Node(0.0, 0.5, POINT_RADIUS, true);
+		auto* endNode= new Node(1.0, 0.5, POINT_RADIUS, true);
+		nodeList = new NodeList(*startNode, *endNode);
+		addAndMakeVisible(nodeList);
+
 	};
 
 	void paint(Graphics& g) override
@@ -31,6 +37,7 @@ struct Plot : public Component {
 		width = getWidth();
 		height = getHeight();
 		playhead.setBounds(0, 0, width, height);
+		nodeList->setBounds(0, 0, width, height);
 	};
 
 	void drawBorder(Graphics& g)
@@ -59,4 +66,6 @@ struct Plot : public Component {
 	float height;
 	float width;
 	Playhead playhead;
+	NodeList* nodeList;
+
 };
