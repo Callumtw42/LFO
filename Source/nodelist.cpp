@@ -13,6 +13,7 @@
 NodeList::NodeList()
 {
 	head.path = std::make_unique<Edge>(head, tail);
+	addAndMakeVisible(head.path.get());
 	addAndMakeVisible(&head);
 	add(&head);
 	addAndMakeVisible(&tail);
@@ -60,6 +61,8 @@ void NodeList::resized()
 	{
 		auto* node = getReference(i);
 		node->updatePosition();
+		if (node->path)
+			node->path->updatePosition();
 	}
 
 }

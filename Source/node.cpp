@@ -13,8 +13,8 @@
 
 Node::Node(float x, float y, float radius, bool isBound)
 {
-	this->relX = x;
-	this->relY = y;
+	this->x = x;
+	this->y = y;
 	//setXY(x, y);
 	this->radius = radius;
 	this->isSelected = false;
@@ -28,7 +28,7 @@ void Node::move(int x, int y)
 {
 	int clampY = std::clamp(y, 0, getParentHeight());
 	int clampX = (leftNeighbour && rightNeighbour)
-		? std::clamp(x, leftNeighbour->x, rightNeighbour->x)
+		? std::clamp(x, (int)leftNeighbour->x * getParentWidth(), (int)rightNeighbour->x * getParentWidth())
 		: x;
 	if (isBound) {
 		setY(clampY);
@@ -38,8 +38,8 @@ void Node::move(int x, int y)
 		setY(clampY);
 	}
 	updatePosition();
-	//if (path) path->updateControlParam();
-	//if (leftNeighbour) leftNeighbour->path->updateControlParam();
+	if (path) path->updateControlParam();
+	if (leftNeighbour) leftNeighbour->path->updateControlParam();
 }
 
 void Node::paint(Graphics& g)
@@ -59,24 +59,23 @@ void Node::resized()
 
 void Node::updatePosition()
 {
-	setBoundsRelative(relX - radius, relY - radius, radius * 2, radius * 2);
+	setBoundsRelative(x - radius, y - radius, radius * 2, radius * 2);
 }
 
 
 void Node::setX(int x)
 {
-	this->x = x;
-	this->relX = (float)x / getParentWidth();
+	this->x = (float)x / getParentWidth();
 }
 
 void Node::setY(int y)
 {
-	this->y = y;
-	this->relY = (float)y / getParentHeight();
+	this->y = (float)y / getParentHeight();
 }
 
 void Node::mouseDrag(const MouseEvent& event)
 {
 	Point<int> mouse = getParentComponent()->getMouseXYRelative();
 	move(mouse.getX(), mouse.getY());
+	//if (path) path->generatePlot();
 }
