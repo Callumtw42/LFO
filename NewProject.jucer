@@ -5,8 +5,20 @@
               cppLanguageStandard="17" pluginFormats="buildStandalone,buildVST3"
               pluginCharacteristicsValue="pluginWantsMidiIn" pluginVST3Category="Fx,Stereo">
   <MAINGROUP id="ALBpnJ" name="LFO">
-    <FILE id="gqGW3F" name="utils.h" compile="0" resource="0" file="Source/utils.h"/>
     <GROUP id="{FB8980AF-43D1-B93A-DEFD-10951AF0CDE4}" name="Source">
+      <GROUP id="{DDB5287F-FF86-5F9B-17CC-227E75F7F594}" name="Spline">
+        <FILE id="tV0Ni7" name="edge.cpp" compile="1" resource="0" file="Source/edge.cpp"/>
+        <FILE id="uydYwA" name="edge.h" compile="0" resource="0" file="Source/edge.h"/>
+        <FILE id="jxOp4o" name="node.cpp" compile="1" resource="0" file="Source/node.cpp"/>
+        <FILE id="WCXkC8" name="node.h" compile="0" resource="0" file="Source/node.h"/>
+        <FILE id="MaIoKA" name="nodelist.cpp" compile="1" resource="0" file="Source/nodelist.cpp"/>
+        <FILE id="SfClbJ" name="nodelist.h" compile="0" resource="0" file="Source/nodelist.h"/>
+        <FILE id="RjtEYu" name="playhead.h" compile="0" resource="0" file="Source/playhead.h"/>
+        <FILE id="krD8xV" name="plot.h" compile="0" resource="0" file="Source/plot.h"/>
+      </GROUP>
+      <FILE id="gqGW3F" name="utils.h" compile="0" resource="0" file="Source/utils.h"/>
+      <FILE id="nzxI6R" name="controlbox.h" compile="0" resource="0" file="Source/controlbox.h"/>
+      <FILE id="LkTx5m" name="dial.h" compile="0" resource="0" file="Source/dial.h"/>
       <FILE id="hn7sAe" name="lfo.h" compile="0" resource="0" file="Source/lfo.h"/>
       <FILE id="YJihaT" name="soulpatch.cpp" compile="0" resource="0" file="Source/soulpatch.cpp"/>
       <FILE id="ZFidrc" name="soulpatch.h" compile="0" resource="0" file="Source/soulpatch.h"/>
@@ -17,16 +29,6 @@
       <FILE id="NNmflN" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="U21k8v" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
-    </GROUP>
-    <FILE id="nzxI6R" name="controlbox.h" compile="0" resource="0" file="Source/controlbox.h"/>
-    <FILE id="LkTx5m" name="dial.h" compile="0" resource="0" file="Source/dial.h"/>
-    <GROUP id="{DDB5287F-FF86-5F9B-17CC-227E75F7F594}" name="Spline">
-      <FILE id="tV0Ni7" name="edge.cpp" compile="1" resource="0" file="Source/edge.cpp"/>
-      <FILE id="jxOp4o" name="node.cpp" compile="1" resource="0" file="Source/node.cpp"/>
-      <FILE id="MaIoKA" name="nodelist.cpp" compile="1" resource="0" file="Source/nodelist.cpp"/>
-      <FILE id="SfClbJ" name="nodelist.h" compile="0" resource="0" file="Source/nodelist.h"/>
-      <FILE id="RjtEYu" name="playhead.h" compile="0" resource="0" file="Source/playhead.h"/>
-      <FILE id="krD8xV" name="plot.h" compile="0" resource="0" file="Source/plot.h"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>

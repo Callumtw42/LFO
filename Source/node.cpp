@@ -8,8 +8,8 @@
   ==============================================================================
 */
 
-#include "nodelist.h"
-
+#include "node.h"
+#include "edge.h"
 
 Node::Node(float x, float y, float radius, bool isBound)
 {

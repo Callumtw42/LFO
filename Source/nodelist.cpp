@@ -67,6 +67,22 @@ void NodeList::resized()
 
 }
 
+int NodeList::findLeftNeighbour(int mouseX)
+{
+	for (int i = 0; i < size(); i++)
+	{
+		auto currentNode = getReference(i);
+		auto Dx = mouseX - currentNode->getX();
+		if (Dx < 0)
+		{
+			return i-1;
+		}
+	}
+	return 0;
+}
+
+
+
 
 //forEach(...args) {
 	//return this.nodes.forEach(...args);

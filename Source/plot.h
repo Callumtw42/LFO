@@ -31,6 +31,7 @@ struct Plot : public Component {
 		drawGrid(g);
 	}
 
+
 	void resized() override
 	{
 		width = getWidth();
@@ -47,7 +48,7 @@ struct Plot : public Component {
 
 	void drawGrid(Graphics& g)
 	{
-		g.setColour(Colours::white);
+		g.setColour(GREY);
 		float dy = height / gridRes,
 			dx = width / gridRes,
 			y = 0,

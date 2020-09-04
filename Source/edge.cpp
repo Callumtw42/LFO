@@ -8,15 +8,18 @@
   ==============================================================================
 */
 
-#include "lfo.h"
+#include "edge.h"
+
 #include "nodelist.h"
 
 Edge::Edge(Node& start, Node& end)
 {
+//tarting XY not normalised
 	this->start = &start;
 	this->end = &end;
 	//this->plot = Array<float>();
-	plot.resize(widthToArrayLength(end.x - start.x));
+	auto newSize = widthToArrayLength(end.x - start.x);
+	plot.resize(newSize);
 	//this->curvePoints = [];
 	const auto ctrlX = start.x + (end.x - start.x) / 2;
 	const auto ctrlY = start.y + (start.y - end.y) / 2;
@@ -31,17 +34,16 @@ int Edge::widthToArrayLength(float Dx) const
 }
 
 void Edge::setControlPoints() {
-	auto dy = end->y - start->y;
-	auto dx = end->x - start->x;
-	auto relY = ctrlParam->relY;
-
-	auto x1 = end->x - dx * relY;
-	auto y1 = start->y + dy * relY;
+	auto Dy = end->y - start->y;
+	auto Dx = end->x - start->x;
+	auto relY = (Dy < 0) ? 1 - ctrlParam->relY : (ctrlParam->relY);
+	auto x1 = end->x - Dx * relY;
+	auto y1 = start->y + Dy * relY;
 	ctrl1.setXY(x1, y1);
 
-	auto x2 = end->x - dx * relY;
-	auto y2 = start->y + dy * relY;
-	ctrl2.setXY(x2, y2);
+	//auto x2 = end->x - Dx * relY;
+	//auto y2 = start->y + Dy * relY;
+	ctrl2.setXY(x1, y1);
 
 }
 
@@ -92,8 +94,7 @@ void Edge::generatePlot() {
 	}
 	const int centreIndex = std::round(plot.size() / 2);
 	ctrlParam->y = plot.getReference(centreIndex);
-	//ctrlParam->setPosition();
-	repaint();
+	ctrlParam->setPosition();
 }
 
 void Edge::updateControlParam() {
@@ -139,32 +140,26 @@ void Edge::moveControlParam(float y)
 
 void Edge::paint(Graphics& g)
 {
-	//g.setColour(Colours::yellow);
-	//g.drawRect(0, 0, getWidth(), getHeight());
 	auto h = getHeight();
 	auto w = getWidth();
-	g.setColour(Colours::red);
+	g.setColour(GREEN);
+	//auto startX = 0.0f;
+	//auto startY = plot[0] * h;
 	for (int i = 0; i < plot.size(); ++i)
 	{
-		if (i % 32 == 0) {
-			auto xPosition = (float)i / plot.size() * w;
-			auto yPosition = plot.getReference(i) * h;
-			g.fillRect(xPosition, yPosition, 1.0f, 1.0f);
-		}
+		//if (i % 1 == 0) {
+			auto currentX = (float)i / plot.size() * w;
+			auto currentY = plot.getReference(i) * h;
+			g.fillEllipse(currentX, currentY, 2.0f, 2.0f);
+			//g.drawLine(currentX, currentY, startX, startY, 1.0f);
+			//startX = currentX;
+			//startY = currentY;
+		//}
 	}
 	g.setColour(Colours::white);
 	g.fillRect(ctrl1.x * w, ctrl1.y * h, 5.0f, 5.0f);
 	g.setColour(Colours::pink);
 	g.fillRect(ctrl2.x * w, ctrl2.y * h, 3.0f, 3.0f);
-
-
-
-	//g.fillRect(ctrlParam->x*getWidth()-5, ctrlParam->y*getHeight()-5, 10.0, 10.0);
-
-
-
-
-
 }
 
 void Edge::resized()
@@ -175,5 +170,14 @@ void Edge::resized()
 void Edge::updatePosition()
 {
 	setBoundsRelative(start->x, 0, end->x, 1);
+}
+
+void Edge::mouseDoubleClick(const MouseEvent& event)
+{
+	auto mouse = event.getMouseDownPosition();
+	auto newNode = std::make_unique<Node>(mouse.getX(), mouse.getY(), POINT_RADIUS, false);
+	auto plot = dynamic_cast<NodeList*>(getParentComponent());
+	auto index = plot->findLeftNeighbour(mouse.getX());
+	plot->insertAfter(index, *std::move(newNode));
 }
 
