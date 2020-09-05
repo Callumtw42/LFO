@@ -12,94 +12,89 @@
 
 NodeList::NodeList()
 {
-	head.path = std::make_unique<Edge>(head, tail);
-	addAndMakeVisible(head.path.get());
-	addAndMakeVisible(&head);
-	add(&head);
-	addAndMakeVisible(&tail);
-	add(&tail);
-	head.rightNeighbour = &tail;
-	head.leftNeighbour = nullptr;
-	tail.rightNeighbour = nullptr;
-	tail.leftNeighbour = &head;
+	head->path = std::make_unique<Edge>(*head.get(), *tail.get());
+	addAndMakeVisible(head->path.get());
+	addAndMakeVisible(head.get());
+	add(head);
+	addAndMakeVisible(tail.get());
+	add(tail);
+	head->rightNeighbour = tail.get();
+	head->leftNeighbour = nullptr;
+	tail->rightNeighbour = nullptr;
+	tail->leftNeighbour = head.get();
 }
 
-
-void NodeList::insertAfter(int index, Node& node)
+void NodeList::mouseDoubleClick(const MouseEvent& event)
 {
-	auto* leftNeighbour = getReference(index);
-	auto* rightNeighbour = leftNeighbour->rightNeighbour;
-	insert(index + 1, &node);
-	node.leftNeighbour = leftNeighbour;
-	leftNeighbour->rightNeighbour = &node;
-	node.rightNeighbour = rightNeighbour;
-	rightNeighbour->leftNeighbour = &node;
-	leftNeighbour->path = std::make_unique<Edge>(*leftNeighbour, node);
-	leftNeighbour->path->updateControlParam();
-	node.path = std::make_unique<Edge>(node, *rightNeighbour);
-	node.path->updateControlParam();
+	auto mouse = event.getMouseDownPosition();
+	auto x = (float)mouse.getX() / getWidth();
+	auto y = (float)mouse.getY() / getHeight();
+	auto newNode = std::make_shared<Node>(x, y, POINT_RADIUS, false);
+	auto index = findLeftNeighbour(mouse.getX());
+	insertAfter(index, std::move(newNode));
+	auto* node = getReference(index + 1).get();
+	addAndMakeVisible(node);
+	node->updatePosition();
+
 }
 
+void NodeList::insertAfter(int index, SPtr<Node> node)
+{
+	auto* leftNeighbour = getReference(index).get();
+	auto* rightNeighbour = leftNeighbour->rightNeighbour;
+	
+	node->leftNeighbour = leftNeighbour;
+	leftNeighbour->rightNeighbour = node.get();
+	node->rightNeighbour = rightNeighbour;
+	rightNeighbour->leftNeighbour = node.get();
+	
+	leftNeighbour->createPath();
+	node->createPath();
+	
+	insert(index + 1, node);
+	for (int i = 0; i < size(); ++i)
+	{
+		getReference(i)->index = i;
+	}
+}
 
 void NodeList::removeNode(int index) {
-	Node* point = getReference(index);
-	Node* leftNeighbour = point->leftNeighbour;
-	Node* rightNeighbour = point->rightNeighbour;
-	leftNeighbour->path = std::make_unique<Edge>(*leftNeighbour, *rightNeighbour);
+	auto* node = getReference(index).get();
+	auto* leftNeighbour = node->leftNeighbour;
+	auto* rightNeighbour = node->rightNeighbour;
+	
+	rightNeighbour->leftNeighbour = leftNeighbour;
+	leftNeighbour->rightNeighbour = rightNeighbour;
+	leftNeighbour->createPath();
+	
 	remove(index);
-	getReference(index)->leftNeighbour = leftNeighbour;
-	leftNeighbour->path->updateControlParam();
-	getReference(index - 1)->rightNeighbour = rightNeighbour;
+	for (int i = 0; i < size(); ++i)
+	{
+		getReference(i)->index = i;
+	}
 }
 
 void NodeList::resized()
 {
-	int height = getHeight();
-	int width = getWidth();
-
 	for (int i = 0; i < size(); ++i)
 	{
-		auto* node = getReference(i);
+		auto* node = getReference(i).get();
 		node->updatePosition();
 		if (node->path)
 			node->path->updatePosition();
 	}
-
 }
 
 int NodeList::findLeftNeighbour(int mouseX)
 {
 	for (int i = 0; i < size(); i++)
 	{
-		auto currentNode = getReference(i);
+		auto currentNode = getReference(i).get();
 		auto Dx = mouseX - currentNode->getX();
 		if (Dx < 0)
 		{
-			return i-1;
+			return i - 1;
 		}
 	}
 	return 0;
 }
-
-
-
-
-//forEach(...args) {
-	//return this.nodes.forEach(...args);
-//}
-
-//indexOf(...args) {
-//    return this.nodes.indexOf(...args);
-//}
-
-//splice(...args) {
-//    return this.nodes.splice(...args);
-//}
-
-//map(...args) {
-//    return this.nodes.map(...args);
-//}
-
-//get() {
-//    return this.nodes;
-//}

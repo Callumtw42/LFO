@@ -14,16 +14,11 @@
 
 Edge::Edge(Node& start, Node& end)
 {
-//tarting XY not normalised
 	this->start = &start;
 	this->end = &end;
-	//this->plot = Array<float>();
 	auto newSize = widthToArrayLength(end.x - start.x);
 	plot.resize(newSize);
-	//this->curvePoints = [];
-	const auto ctrlX = start.x + (end.x - start.x) / 2;
-	const auto ctrlY = start.y + (start.y - end.y) / 2;
-	this->ctrlParam = std::make_unique<CtrlParam>(*this, ctrlX, ctrlY);
+	this->ctrlParam = std::make_unique<CtrlParam>(*this);
 	addAndMakeVisible(ctrlParam.get());
 }
 
@@ -40,18 +35,12 @@ void Edge::setControlPoints() {
 	auto x1 = end->x - Dx * relY;
 	auto y1 = start->y + Dy * relY;
 	ctrl1.setXY(x1, y1);
-
-	//auto x2 = end->x - Dx * relY;
-	//auto y2 = start->y + Dy * relY;
 	ctrl2.setXY(x1, y1);
-
 }
 
 void Edge::generatePlot() {
-	//auto curvePoints = this->curvePoints.get();
-	plot.resize(widthToArrayLength(end->x - start->x));
-	//const{ start, end, plot, cubicBezier } = this;
-//const { ctrl1, ctrl2 } = this.getControlPoints();
+	auto newSize = widthToArrayLength(end->x - start->x);
+	plot.resize(newSize);
 	setControlPoints();
 	const int curveRes = std::round(plot.size() / VALUES_PER_CURVE_POINT);
 	curvePoints.resize(curveRes);
@@ -94,24 +83,12 @@ void Edge::generatePlot() {
 	}
 	const int centreIndex = std::round(plot.size() / 2);
 	ctrlParam->y = plot.getReference(centreIndex);
-	ctrlParam->setPosition();
-}
-
-void Edge::updateControlParam() {
-	//const { start, end, ctrlParam } = this;
-	auto dx = end->x - start->x;
-	auto dy = end->y - start->y;
-	auto relY = ctrlParam->relY;
-
-	ctrlParam->x = start->x + dx * 0.5;
-	ctrlParam->y = start->y + dy * std::abs(relY);
-	generatePlot();
 	updatePosition();
+	ctrlParam->setPosition();
 }
 
 std::shared_ptr<CurvePoint> Edge::cubicBezier(Node& p0, Point& p1, Point& p2, Node& p3, float t) const
 {
-	//pFinal = pFinal || {};
 	auto pFinal = std::make_shared<CurvePoint>();
 	pFinal->x = std::pow(1 - t, 3) * p0.x +
 		std::pow(1 - t, 2) * 3 * t * p1.x +
@@ -126,7 +103,6 @@ std::shared_ptr<CurvePoint> Edge::cubicBezier(Node& p0, Point& p1, Point& p2, No
 
 void Edge::moveControlParam(float y)
 {
-	//const { start, end } = this;
 	auto maxY = std::max(start->y, end->y);
 	auto minY = std::min(start->y, end->y);
 	auto clampY = std::clamp<float>(y, minY, maxY);
@@ -143,18 +119,12 @@ void Edge::paint(Graphics& g)
 	auto h = getHeight();
 	auto w = getWidth();
 	g.setColour(GREEN);
-	//auto startX = 0.0f;
-	//auto startY = plot[0] * h;
+	//g.drawRect(0, 0, w, h);
 	for (int i = 0; i < plot.size(); ++i)
 	{
-		//if (i % 1 == 0) {
-			auto currentX = (float)i / plot.size() * w;
-			auto currentY = plot.getReference(i) * h;
-			g.fillEllipse(currentX, currentY, 2.0f, 2.0f);
-			//g.drawLine(currentX, currentY, startX, startY, 1.0f);
-			//startX = currentX;
-			//startY = currentY;
-		//}
+		auto currentX = (float)i / plot.size() * w;
+		auto currentY = plot.getReference(i) * h;
+		g.fillEllipse(currentX, currentY, 2.0f, 2.0f);
 	}
 	g.setColour(Colours::white);
 	g.fillRect(ctrl1.x * w, ctrl1.y * h, 5.0f, 5.0f);
@@ -169,15 +139,11 @@ void Edge::resized()
 
 void Edge::updatePosition()
 {
-	setBoundsRelative(start->x, 0, end->x, 1);
+	setBoundsRelative(start->x, 0, end->x - start->x, 1);
 }
 
 void Edge::mouseDoubleClick(const MouseEvent& event)
 {
-	auto mouse = event.getMouseDownPosition();
-	auto newNode = std::make_unique<Node>(mouse.getX(), mouse.getY(), POINT_RADIUS, false);
-	auto plot = dynamic_cast<NodeList*>(getParentComponent());
-	auto index = plot->findLeftNeighbour(mouse.getX());
-	plot->insertAfter(index, *std::move(newNode));
+	getParentComponent()->mouseDoubleClick(event);
 }
 

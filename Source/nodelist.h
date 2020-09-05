@@ -13,16 +13,17 @@
 #include "utils.h"
 #include "edge.h"
 
-struct NodeList : public Component, Array<Node*>
+struct NodeList : public Component, Array<SPtr<Node>>
 {
 	NodeList();
-	void insertAfter(int index, Node& node);
+	void insertAfter(int index, SPtr<Node> node);
 	void removeNode(int index);
 	void resized() override;
 	int findLeftNeighbour(int mouseX);
+	void mouseDoubleClick(const MouseEvent& event) override;
 
-	Node head = Node(0, 1, POINT_RADIUS, true);
-	Node tail = Node(1, 1, POINT_RADIUS, true);
+	SPtr<Node> head = std::make_unique<Node>(0.0f, 1.0f, POINT_RADIUS, true);
+	SPtr<Node> tail = std::make_unique<Node>(1.0f, 1.0f, POINT_RADIUS, true);
 };
 
 

@@ -1,9 +1,9 @@
 /*
   ==============================================================================
 
-    node.h
-    Created: 4 Sep 2020 2:28:06pm
-    Author:  callu
+	node.h
+	Created: 4 Sep 2020 2:28:06pm
+	Author:  callu
 
   ==============================================================================
 */
@@ -20,9 +20,11 @@ struct Node :public Component
 	void paint(Graphics& g) override;
 	void resized() override;
 	void mouseDrag(const MouseEvent& event) override;
+	void mouseDoubleClick(const MouseEvent& event) override;
 	void updatePosition();
 	void setX(int x);
 	void setY(int y);
+	void createPath();
 
 	std::unique_ptr<Edge> path;
 	Node* rightNeighbour;
@@ -32,9 +34,6 @@ struct Node :public Component
 	float radius;
 	bool isSelected;
 	bool isBound;
-
-private:
-	int parentHeight = 0;
-	int parentWidth = 0;
+	int index = -1;
 };
 

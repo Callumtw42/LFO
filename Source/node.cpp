@@ -10,6 +10,7 @@
 
 #include "node.h"
 #include "edge.h"
+#include "nodelist.h"
 
 Node::Node(float x, float y, float radius, bool isBound)
 {
@@ -28,7 +29,7 @@ void Node::move(int x, int y)
 {
 	int clampY = std::clamp(y, 0, getParentHeight());
 	int clampX = (leftNeighbour && rightNeighbour)
-		? std::clamp(x, (int)leftNeighbour->x * getParentWidth(), (int)rightNeighbour->x * getParentWidth())
+		? std::clamp(x, (int)(leftNeighbour->x * getParentWidth() + 1), (int)(rightNeighbour->x * getParentWidth() - 1))
 		: x;
 	if (isBound) {
 		setY(clampY);
@@ -37,9 +38,13 @@ void Node::move(int x, int y)
 		setX(clampX);
 		setY(clampY);
 	}
+
 	updatePosition();
-	if (path) path->updateControlParam();
-	if (leftNeighbour) leftNeighbour->path->updateControlParam();
+
+	if (path)
+		path->generatePlot();
+	if (leftNeighbour)
+		leftNeighbour->path->generatePlot();
 }
 
 void Node::paint(Graphics& g)
@@ -73,9 +78,24 @@ void Node::setY(int y)
 	this->y = (float)y / getParentHeight();
 }
 
+void Node::createPath()
+{
+	path = std::make_unique<Edge>(*this, *rightNeighbour);
+	getParentComponent()->addAndMakeVisible(path.get(), 0);
+	path->updatePosition();
+	path->generatePlot();
+	repaint();
+}
+
 void Node::mouseDrag(const MouseEvent& event)
 {
 	Point<int> mouse = getParentComponent()->getMouseXYRelative();
 	move(mouse.getX(), mouse.getY());
 	//if (path) path->generatePlot();
+}
+
+void Node::mouseDoubleClick(const MouseEvent& event)
+{
+	auto parent = dynamic_cast<NodeList*>(getParentComponent());
+	if (!isBound) parent->removeNode(index);
 }
