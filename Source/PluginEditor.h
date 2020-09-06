@@ -6,6 +6,8 @@
 #include "plot.h"
 #include "controlbox.h"
 
+static const int WIDTH = 300;
+static const int HEIGHT = 200;
 
 class UI :public Component
 {
@@ -19,7 +21,8 @@ public:
 				plot.gridRes = value;
 				plot.repaint();
 			}));
-		//NEXT: Create an alternative dial constructor which accepts an array of values
+		
+		addAndMakeVisible(controls);
 		std::array<float, (int)9>* speedValues = new std::array<float, 9>({
 			4.0f ,2.0f, 1.0f,
 			1.0f / 2, 1.0f / 4,1.0f / 8,
@@ -30,28 +33,12 @@ public:
 				processor.lfo->speed = value;
 			}));
 
-		addAndMakeVisible(controls);
 	}
 
 	void resized() override
 	{
-		const float width = getWidth(), height = getHeight();
-		const Rectangle<int> plotBounds = Rectangle<int>(
-			0,
-			0,
-			width,
-			3.0f / 4 * height
-			);
-
-		const Rectangle<int> controlBounds = Rectangle<int>(
-			0,
-			plotBounds.getHeight(),
-			width,
-			height - plotBounds.getHeight()
-			);
-
-		plot.setBounds(plotBounds);
-		controls.setBounds(controlBounds);
+		plot.setBoundsRelative(0, 0, 1, 0.75f);
+		controls.setBoundsRelative(0, 0.75f, 1, 0.25f);
 	};
 
 	Plot plot;

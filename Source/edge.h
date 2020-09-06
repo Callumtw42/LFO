@@ -30,6 +30,7 @@ struct Edge : public Component
 		CtrlParam(Edge& path)
 			:path(&path)
 		{
+			getParentComponent()->addAndMakeVisible(*this);
 			this->x = 0.5;
 			this->y = 0.5;
 		}

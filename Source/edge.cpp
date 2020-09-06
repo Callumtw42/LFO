@@ -20,6 +20,7 @@ Edge::Edge(Node& start, Node& end)
 	plot.resize(newSize);
 	this->ctrlParam = std::make_unique<CtrlParam>(*this);
 	addAndMakeVisible(ctrlParam.get());
+	generatePlot();
 }
 
 int Edge::widthToArrayLength(float Dx) const
@@ -82,7 +83,10 @@ void Edge::generatePlot() {
 		}
 	}
 	const int centreIndex = std::round(plot.size() / 2);
-	ctrlParam->y = plot.getReference(centreIndex);
+	ctrlParam->y =
+		(plot.size() > 2)
+		? plot.getReference(centreIndex)
+		: ctrlParam->relY;
 	updatePosition();
 	ctrlParam->setPosition();
 }
@@ -139,7 +143,7 @@ void Edge::resized()
 
 void Edge::updatePosition()
 {
-	setBoundsRelative(start->x, 0, end->x - start->x, 1);
+	setBoundsRelative(start->x, 0.0f, end->x - start->x, 1.0f);
 }
 
 void Edge::mouseDoubleClick(const MouseEvent& event)

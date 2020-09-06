@@ -9,14 +9,15 @@
 */
 
 #include "nodelist.h"
+#include "edge.h"
 
 NodeList::NodeList()
 {
 	head->path = std::make_unique<Edge>(*head.get(), *tail.get());
 	addAndMakeVisible(head->path.get());
 	addAndMakeVisible(head.get());
-	add(head);
 	addAndMakeVisible(tail.get());
+	add(head);
 	add(tail);
 	head->rightNeighbour = tail.get();
 	head->leftNeighbour = nullptr;
@@ -26,7 +27,7 @@ NodeList::NodeList()
 
 void NodeList::mouseDoubleClick(const MouseEvent& event)
 {
-	auto mouse = event.getMouseDownPosition();
+	auto mouse = getMouseXYRelative();
 	auto x = (float)mouse.getX() / getWidth();
 	auto y = (float)mouse.getY() / getHeight();
 	auto newNode = std::make_shared<Node>(x, y, POINT_RADIUS, false);
@@ -42,31 +43,40 @@ void NodeList::insertAfter(int index, SPtr<Node> node)
 {
 	auto* leftNeighbour = getReference(index).get();
 	auto* rightNeighbour = leftNeighbour->rightNeighbour;
-	
+
 	node->leftNeighbour = leftNeighbour;
 	leftNeighbour->rightNeighbour = node.get();
 	node->rightNeighbour = rightNeighbour;
 	rightNeighbour->leftNeighbour = node.get();
-	
-	leftNeighbour->createPath();
-	node->createPath();
-	
+
+	leftNeighbour->path = std::make_unique<Edge>(*leftNeighbour, *node);
+	addAndMakeVisible(leftNeighbour->path.get(), 0);
+	leftNeighbour->path->generatePlot();
+
+	node->path = std::make_unique<Edge>(*node, *rightNeighbour);
+	addAndMakeVisible(node->path.get(), 0);
+	node->path->generatePlot();
+
 	insert(index + 1, node);
 	for (int i = 0; i < size(); ++i)
 	{
 		getReference(i)->index = i;
 	}
+	dbg(leftNeighbour->index);
 }
 
 void NodeList::removeNode(int index) {
 	auto* node = getReference(index).get();
 	auto* leftNeighbour = node->leftNeighbour;
 	auto* rightNeighbour = node->rightNeighbour;
-	
+
 	rightNeighbour->leftNeighbour = leftNeighbour;
 	leftNeighbour->rightNeighbour = rightNeighbour;
-	leftNeighbour->createPath();
-	
+
+	leftNeighbour->path = std::make_unique<Edge>(*leftNeighbour, *rightNeighbour);
+	addAndMakeVisible(*leftNeighbour->path, 0);
+	leftNeighbour->path->generatePlot();
+
 	remove(index);
 	for (int i = 0; i < size(); ++i)
 	{
@@ -90,7 +100,8 @@ int NodeList::findLeftNeighbour(int mouseX)
 	for (int i = 0; i < size(); i++)
 	{
 		auto currentNode = getReference(i).get();
-		auto Dx = mouseX - currentNode->getX();
+		auto nodeX = currentNode->x * (float)getWidth();
+		auto Dx = mouseX - nodeX;
 		if (Dx < 0)
 		{
 			return i - 1;

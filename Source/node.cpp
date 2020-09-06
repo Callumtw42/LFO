@@ -59,7 +59,7 @@ void Node::paint(Graphics& g)
 
 void Node::resized()
 {
-	updatePosition();
+	if(path) path->updatePosition();
 }
 
 void Node::updatePosition()
@@ -80,11 +80,10 @@ void Node::setY(int y)
 
 void Node::createPath()
 {
-	path = std::make_unique<Edge>(*this, *rightNeighbour);
-	getParentComponent()->addAndMakeVisible(path.get(), 0);
-	path->updatePosition();
-	path->generatePlot();
-	repaint();
+	//getParentComponent()->addAndMakeVisible(path.get(), 0);
+	//path->updatePosition();
+	//path->generatePlot();
+	//repaint();
 }
 
 void Node::mouseDrag(const MouseEvent& event)

@@ -17,13 +17,14 @@
 
 const float REL_PLOTHEIGHT = 0.75;
 
-struct Plot : public Component {
+struct Plot : public Component
+{
 
 	Plot()
 	{
 		addAndMakeVisible(playhead);
 		addAndMakeVisible(nodeList);
-	};
+	}
 
 	void paint(Graphics& g) override
 	{
@@ -34,20 +35,20 @@ struct Plot : public Component {
 
 	void resized() override
 	{
-		width = getWidth();
-		height = getHeight();
-		playhead.setSize(width, height);
-		nodeList.setSize(width, height);
+		playhead.setBoundsRelative(0, 0, 1, 1);
+		nodeList.setBoundsRelative(0, 0, 1, 1);
 	};
 
 	void drawBorder(Graphics& g)
 	{
 		g.setColour(Colours::green);
-		g.drawRect(0.0, 0.0, width, height);
+		g.drawRect(0.0, 0.0, getWidth(), getHeight());
 	}
 
 	void drawGrid(Graphics& g)
 	{
+		auto height = (float)getHeight();
+		auto width = (float)getWidth();
 		g.setColour(GREY);
 		float dy = height / gridRes,
 			dx = width / gridRes,
@@ -63,8 +64,6 @@ struct Plot : public Component {
 	}
 
 	int gridRes = 16;
-	float height;
-	float width;
 	Playhead playhead;
 	NodeList nodeList;
 

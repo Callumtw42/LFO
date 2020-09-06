@@ -13,18 +13,17 @@
 
 	struct Playhead : public Component
 	{
+		Playhead()
+		{
+			getParentComponent()->addAndMakeVisible(*this);
+			setBoundsRelative(0, 0, 1, 1);
+		}
 		void paint(Graphics& g) override
 		{
-			float position = relPosition * width;
+			float position = relPosition * getWidth();
 			//Logger::writeToLog(String(relPosition));
 			g.setColour(Colours::yellow);
-			g.drawLine(position, 0.0, position, height);
-		};
-
-		void resized() override
-		{
-			width = getWidth();
-			height = getHeight();
+			g.drawLine(position, 0.0, position, getHeight());
 		};
 
 		void setPosition(float p)
@@ -33,7 +32,5 @@
 			repaint();
 		}
 
-		float width = 0.0f;
-		float height = 0.0f;
 		float relPosition = 0.1f;
 	};
