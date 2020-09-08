@@ -54,29 +54,13 @@ public:
 				});
 			proc.detach();
 		}
-		//if (mode == sync) {
-		//	std::chrono::steady_clock::time_point startTime = std::chrono::time_point<>
-		//	std::thread proc([this, startTime]()
-		//		{
-		//			while (mode == sync)
-		//			{
-		//				process(startTime);
-		//				std::this_thread::sleep_for(std::chrono::microseconds(minInterval));
-		//			}
-		//		});
-		//	proc.detach();
-		//}
 	}
 
-	//void stop()
-	//{
-	//	isOn = false;
-	//}
-
+	//NEXT:: Fix 1 shot Mode
 	void trigger(bool isNoteOn)
 	{
 		std::chrono::steady_clock::time_point startTime = std::chrono::high_resolution_clock::now();
-		if (mode == oneShot) {
+		if (mode == oneshot) {
 			std::thread proc([this, startTime]()
 				{
 					for (int i = 0; i < LFORES; ++i)
@@ -87,7 +71,7 @@ public:
 				});
 			proc.detach();
 		}
-		else if (mode == hold) {
+		else if (mode == latch) {
 			noteOn = isNoteOn;
 			std::thread proc([this, startTime]()
 				{
@@ -112,16 +96,16 @@ public:
 		int rounded = std::round(intervalsElapsed * LFORES);
 		int index = rounded % LFORES;
 		currentIndex = index;
-		//if (index - currentIndex > 32)
-		//{
-			//callback(index % LFORES);
-			//currentIndex = index;
-		//}
 		double lfoVal = plot[index];
 		double outVal = std::clamp(lfoVal, 0.0, 1.0);
-		//Logger::writeToLog(juce::String(outVal));
 		endPoint->setValue(outVal);
 		dbg(lfoVal);
+	}
+
+	void setMode(int mode)
+	{
+		this->mode = mode;
+		if (mode == free) start();
 	}
 
 	int minInterval = 1000;
@@ -129,8 +113,9 @@ public:
 	std::array<float, LFORES> plot;
 	AudioProcessorParameter* endPoint;
 	bool noteOn = false;
-	enum { free, oneShot, hold, sync }modes;
-	int mode = free;
+	//enum { free, oneShot, hold, sync }modes;
+	enum { sync, oneshot, latch, free } modes;
+	int mode = 0;
 	std::function<void(int)> callback;
 	int currentIndex = 0;
 };

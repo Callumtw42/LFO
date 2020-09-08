@@ -92,7 +92,7 @@ void NodeList::insertAfter(int index, SPtr<Node> node)
 	{
 		getReference(i)->index = i;
 	}
-	dbg(leftNeighbour->index);
+	//dbg(leftNeighbour->index);
 }
 
 void NodeList::removeNode(int index) {

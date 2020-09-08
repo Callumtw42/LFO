@@ -20,7 +20,6 @@ Edge::Edge(NodeList& nodeList, Node& start, Node& end)
 	auto newSize = widthToArrayLength(end.x - start.x);
 	plot.resize(newSize);
 	this->ctrlParam = std::make_unique<CtrlParam>(*this);
-	//addAndMakeVisible(ctrlParam.get());
 	generatePlot();
 }
 
@@ -33,14 +32,10 @@ int Edge::widthToArrayLength(float Dx) const
 void Edge::setControlPoints() {
 	auto Dy = end->y - start->y;
 	auto Dx = end->x - start->x;
-	//auto value = ctrlParam->value;
 	auto relY = ctrlParam->value;
 	auto x = end->x - Dx * relY;
-	//jassert(0 <= x && x <= 1);
 
 	auto y = start->y + Dy * relY;
-	//: start->y + (1 - Dy * value);
-	//jassert(0 <= y && y <= 1);
 
 	ctrl1.setXY(x, y);
 	ctrl2.setXY(x, y);
@@ -152,19 +147,20 @@ void Edge::paint(Graphics& g)
 	auto w = getWidth();
 	auto pw = getParentWidth();
 	g.setColour(GREEN);
-	//g.drawRect(0, 0, w, h);
 	for (int i = 0; i < plot.size(); ++i)
 	{
 		auto currentX = (float)i / plot.size() * w;
 		auto currentY = plot.getReference(i) * h;
 		g.fillEllipse(currentX, currentY, 2.0f, 2.0f);
 	}
+	/*##############--DEBUGGING--####################
 	g.setColour(Colours::white);
 	g.fillRect(ctrl1.x * pw, ctrl1.y * h, 5.0f, 5.0f);
 	g.setColour(Colours::pink);
 	g.fillRect(ctrl2.x * pw, ctrl2.y * h, 3.0f, 3.0f);
 	auto* txt = new String(ctrlParam->value);
 	g.drawText(*txt, 0, 0, getWidth(), getHeight(), Justification::centred);
+	*/
 }
 
 void Edge::resized()

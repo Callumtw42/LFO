@@ -12,31 +12,22 @@
 #include<juceheader.h>
 #include "dial.h"
 
-	struct Controls : public Component
+	struct Controls : public Component, std::vector<SPtr<Component>>
 	{
-		Controls()
+		void add(SPtr<Component> ctrl)
 		{
-		}
-
-		void addDial(Dial* dial)
-		{
-			dials.push_back(dial);
-			addAndMakeVisible(*dial);
+			push_back(ctrl);
+			addAndMakeVisible(ctrl.get());
 		}
 
 		void resized() override
 		{
-			width = getWidth();
-			height = getHeight();
-			const float dialSize = height;
-			for (int i = 0; i < dials.size(); ++i)
+			const auto ctrlSize = getHeight();
+			for (int i = 0; i < size(); ++i)
 			{
-				float disp = i * dialSize;
-				dials[i]->setBounds(disp, 0, dialSize, dialSize);
+				float disp = i * ctrlSize;
+				this->at(i)->setBounds(disp, 0, ctrlSize, ctrlSize);
 			}
 		}
-		std::vector<Dial*> dials;
-		float width;
-		float height;
 	};
 
