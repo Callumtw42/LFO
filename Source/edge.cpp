@@ -12,14 +12,15 @@
 
 #include "nodelist.h"
 
-Edge::Edge(Node& start, Node& end)
+Edge::Edge(NodeList& nodeList, Node& start, Node& end)
 {
 	this->start = &start;
 	this->end = &end;
+	this->nodeList = &nodeList;
 	auto newSize = widthToArrayLength(end.x - start.x);
 	plot.resize(newSize);
 	this->ctrlParam = std::make_unique<CtrlParam>(*this);
-	addAndMakeVisible(ctrlParam.get());
+	//addAndMakeVisible(ctrlParam.get());
 	generatePlot();
 }
 
@@ -32,17 +33,21 @@ int Edge::widthToArrayLength(float Dx) const
 void Edge::setControlPoints() {
 	auto Dy = end->y - start->y;
 	auto Dx = end->x - start->x;
-	auto relY = (Dy < 0) ? 1 - ctrlParam->relY : (ctrlParam->relY);
-	auto x1 = end->x - Dx * relY;
-	auto y1 = start->y + Dy * relY;
-	ctrl1.setXY(x1, y1);
-	ctrl2.setXY(x1, y1);
+	//auto value = ctrlParam->value;
+	auto relY = ctrlParam->value;
+	auto x = end->x - Dx * relY;
+	//jassert(0 <= x && x <= 1);
+
+	auto y = start->y + Dy * relY;
+	//: start->y + (1 - Dy * value);
+	//jassert(0 <= y && y <= 1);
+
+	ctrl1.setXY(x, y);
+	ctrl2.setXY(x, y);
 }
 
-void Edge::generatePlot() {
-	auto newSize = widthToArrayLength(end->x - start->x);
-	plot.resize(newSize);
-	setControlPoints();
+void Edge::setCurvePoints()
+{
 	const int curveRes = std::round(plot.size() / VALUES_PER_CURVE_POINT);
 	curvePoints.resize(curveRes);
 	for (int i = 0; i < curveRes; i++) {
@@ -52,6 +57,28 @@ void Edge::generatePlot() {
 		p->targetIndex = std::ceil(relPosition * (plot.size()));
 		curvePoints.getReference(i) = std::move(p);
 	}
+}
+
+
+void Edge::updateCtrlParam()
+{
+	auto size = plot.size();
+	if (size > 2)
+	{
+		const int centreIndex = std::round(size / 2);
+		ctrlParam->y = plot.getReference(centreIndex);
+	}
+	else
+	{
+		ctrlParam->y = start->y + ctrlParam->value * (end->y - start->y);
+	}
+}
+
+void Edge::generatePlot() {
+	auto newSize = widthToArrayLength(end->x - start->x);
+	plot.resize(newSize);
+	setControlPoints();
+	setCurvePoints();
 
 	int current = 0;
 	int next = 1;
@@ -66,8 +93,11 @@ void Edge::generatePlot() {
 		const auto Dy = (targetY - startY);
 		const auto dy = Dy / (Dx | 1);
 		for (int j = 0; j < Dx; j++) {
-			plot.getReference(i) = curvePoints.getReference(current)->y + j * dy;
-			i++;
+			if (i < newSize)
+			{
+				plot.getReference(i) = curvePoints.getReference(current)->y + j * dy;
+				i++;
+			}
 		}
 		current++;
 		next++;
@@ -82,14 +112,12 @@ void Edge::generatePlot() {
 			i++;
 		}
 	}
-	const int centreIndex = std::round(plot.size() / 2);
-	ctrlParam->y =
-		(plot.size() > 2)
-		? plot.getReference(centreIndex)
-		: ctrlParam->relY;
+	nodeList->updatePlot();
+	updateCtrlParam();
 	updatePosition();
 	ctrlParam->setPosition();
 }
+
 
 std::shared_ptr<CurvePoint> Edge::cubicBezier(Node& p0, Point& p1, Point& p2, Node& p3, float t) const
 {
@@ -112,7 +140,7 @@ void Edge::moveControlParam(float y)
 	auto clampY = std::clamp<float>(y, minY, maxY);
 	auto dy = end->y - start->y;
 	auto yInBounds = clampY - end->y;
-	ctrlParam->relY = (-yInBounds * 2 / dy) - 1;
+	ctrlParam->value = (-yInBounds * 2 / dy) - 1;
 	generatePlot();
 }
 
@@ -122,6 +150,7 @@ void Edge::paint(Graphics& g)
 {
 	auto h = getHeight();
 	auto w = getWidth();
+	auto pw = getParentWidth();
 	g.setColour(GREEN);
 	//g.drawRect(0, 0, w, h);
 	for (int i = 0; i < plot.size(); ++i)
@@ -131,9 +160,11 @@ void Edge::paint(Graphics& g)
 		g.fillEllipse(currentX, currentY, 2.0f, 2.0f);
 	}
 	g.setColour(Colours::white);
-	g.fillRect(ctrl1.x * w, ctrl1.y * h, 5.0f, 5.0f);
+	g.fillRect(ctrl1.x * pw, ctrl1.y * h, 5.0f, 5.0f);
 	g.setColour(Colours::pink);
-	g.fillRect(ctrl2.x * w, ctrl2.y * h, 3.0f, 3.0f);
+	g.fillRect(ctrl2.x * pw, ctrl2.y * h, 3.0f, 3.0f);
+	auto* txt = new String(ctrlParam->value);
+	g.drawText(*txt, 0, 0, getWidth(), getHeight(), Justification::centred);
 }
 
 void Edge::resized()
@@ -150,4 +181,5 @@ void Edge::mouseDoubleClick(const MouseEvent& event)
 {
 	getParentComponent()->mouseDoubleClick(event);
 }
+
 

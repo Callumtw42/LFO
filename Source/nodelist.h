@@ -15,15 +15,17 @@
 
 struct NodeList : public Component, Array<SPtr<Node>>
 {
-	NodeList();
+	NodeList(std::array<float, LFORES>& lfoPlot);
 	void insertAfter(int index, SPtr<Node> node);
 	void removeNode(int index);
 	void resized() override;
 	int findLeftNeighbour(int mouseX);
 	void mouseDoubleClick(const MouseEvent& event) override;
+	void updatePlot();
 
 	SPtr<Node> head = std::make_unique<Node>(0.0f, 1.0f, POINT_RADIUS, true);
 	SPtr<Node> tail = std::make_unique<Node>(1.0f, 1.0f, POINT_RADIUS, true);
+	std::array<float, LFORES>* lfoPlot;
 };
 
 

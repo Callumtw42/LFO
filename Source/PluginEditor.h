@@ -15,11 +15,12 @@ public:
 	UI(Processor& processor) :
 		processor(&processor)
 	{
-		addAndMakeVisible(plot);
+		this->plot = std::make_unique<Plot>(processor.lfo->plot);
+		addAndMakeVisible(plot.get());
 		controls.addDial(new Dial(1, 16, 1, 8, [&](float value)
 			{
-				plot.gridRes = value;
-				plot.repaint();
+				plot->gridRes = value;
+				plot->repaint();
 			}));
 		
 		addAndMakeVisible(controls);
@@ -37,11 +38,11 @@ public:
 
 	void resized() override
 	{
-		plot.setBoundsRelative(0, 0, 1, 0.75f);
+		plot->setBoundsRelative(0, 0, 1, 0.75f);
 		controls.setBoundsRelative(0, 0.75f, 1, 0.25f);
 	};
 
-	Plot plot;
+	UPtr<Plot> plot;
 	Controls controls;
 	Processor* processor;
 };

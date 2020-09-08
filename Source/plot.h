@@ -19,11 +19,11 @@ const float REL_PLOTHEIGHT = 0.75;
 
 struct Plot : public Component
 {
-
-	Plot()
+	Plot(std::array<float, LFORES>& lfoPlot)
 	{
+		nodeList = std::make_unique<NodeList>(lfoPlot);
 		addAndMakeVisible(playhead);
-		addAndMakeVisible(nodeList);
+		addAndMakeVisible(nodeList.get());
 	}
 
 	void paint(Graphics& g) override
@@ -36,7 +36,7 @@ struct Plot : public Component
 	void resized() override
 	{
 		playhead.setBoundsRelative(0, 0, 1, 1);
-		nodeList.setBoundsRelative(0, 0, 1, 1);
+		nodeList->setBoundsRelative(0, 0, 1, 1);
 	};
 
 	void drawBorder(Graphics& g)
@@ -65,6 +65,7 @@ struct Plot : public Component
 
 	int gridRes = 16;
 	Playhead playhead;
-	NodeList nodeList;
+	UPtr<NodeList> nodeList;
+
 
 };

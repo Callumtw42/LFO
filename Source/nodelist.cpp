@@ -11,10 +11,12 @@
 #include "nodelist.h"
 #include "edge.h"
 
-NodeList::NodeList()
+NodeList::NodeList(std::array<float, LFORES>& lfoPlot)
 {
-	head->path = std::make_unique<Edge>(*head.get(), *tail.get());
-	addAndMakeVisible(head->path.get());
+	this->lfoPlot = &lfoPlot;
+	head->path = std::make_unique<Edge>(*this, *head.get(), *tail.get());
+	addAndMakeVisible(head->path.get(), 0);
+	addAndMakeVisible(head->path->ctrlParam.get(), 1);
 	addAndMakeVisible(head.get());
 	addAndMakeVisible(tail.get());
 	add(head);
@@ -23,6 +25,10 @@ NodeList::NodeList()
 	head->leftNeighbour = nullptr;
 	tail->rightNeighbour = nullptr;
 	tail->leftNeighbour = head.get();
+	auto newNode = std::make_shared<Node>(0.5, 0, POINT_RADIUS, false);
+	addAndMakeVisible(newNode.get());
+	insertAfter(0, std::move(newNode));
+	updatePlot();
 }
 
 void NodeList::mouseDoubleClick(const MouseEvent& event)
@@ -39,6 +45,28 @@ void NodeList::mouseDoubleClick(const MouseEvent& event)
 
 }
 
+void NodeList::updatePlot()
+{
+	int i = 0;
+	for (int j = 0; j < size(); ++j)
+	{
+		auto node = getReference(j);
+		if (node->path)
+		{
+			auto plot = node->path->plot;
+			auto size = plot.size();
+			for (int k = 0; k < size; ++k)
+			{
+				if (i >= LFORES) break;
+				auto value = plot.getReference(k);
+				lfoPlot->at(i) = 1.0f - value;
+				//dbg(lfoPlot[i);
+				i++;
+			}
+		}
+	}
+}
+
 void NodeList::insertAfter(int index, SPtr<Node> node)
 {
 	auto* leftNeighbour = getReference(index).get();
@@ -49,12 +77,14 @@ void NodeList::insertAfter(int index, SPtr<Node> node)
 	node->rightNeighbour = rightNeighbour;
 	rightNeighbour->leftNeighbour = node.get();
 
-	leftNeighbour->path = std::make_unique<Edge>(*leftNeighbour, *node);
+	leftNeighbour->path = std::make_unique<Edge>(*this, *leftNeighbour, *node);
 	addAndMakeVisible(leftNeighbour->path.get(), 0);
+	addAndMakeVisible(leftNeighbour->path->ctrlParam.get(), 1);
 	leftNeighbour->path->generatePlot();
 
-	node->path = std::make_unique<Edge>(*node, *rightNeighbour);
+	node->path = std::make_unique<Edge>(*this, *node, *rightNeighbour);
 	addAndMakeVisible(node->path.get(), 0);
+	addAndMakeVisible(node->path->ctrlParam.get(), 1);
 	node->path->generatePlot();
 
 	insert(index + 1, node);
@@ -73,8 +103,9 @@ void NodeList::removeNode(int index) {
 	rightNeighbour->leftNeighbour = leftNeighbour;
 	leftNeighbour->rightNeighbour = rightNeighbour;
 
-	leftNeighbour->path = std::make_unique<Edge>(*leftNeighbour, *rightNeighbour);
+	leftNeighbour->path = std::make_unique<Edge>(*this, *leftNeighbour, *rightNeighbour);
 	addAndMakeVisible(*leftNeighbour->path, 0);
+	addAndMakeVisible(*leftNeighbour->path->ctrlParam, 1);
 	leftNeighbour->path->generatePlot();
 
 	remove(index);

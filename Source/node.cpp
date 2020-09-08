@@ -29,7 +29,7 @@ void Node::move(int x, int y)
 {
 	int clampY = std::clamp(y, 0, getParentHeight());
 	int clampX = (leftNeighbour && rightNeighbour)
-		? std::clamp(x, (int)(leftNeighbour->x * getParentWidth() + 1), (int)(rightNeighbour->x * getParentWidth() - 1))
+		? std::clamp(x, (int)(leftNeighbour->x * getParentWidth()), (int)(rightNeighbour->x * getParentWidth()))
 		: x;
 	if (isBound) {
 		setY(clampY);
@@ -59,12 +59,17 @@ void Node::paint(Graphics& g)
 
 void Node::resized()
 {
-	if(path) path->updatePosition();
+	if (path) path->updatePosition();
 }
 
 void Node::updatePosition()
 {
-	setBoundsRelative(x - radius, y - radius, radius * 2, radius * 2);
+	auto p = getParentComponent();
+	auto w = p->getWidth();
+	auto h = p->getHeight();
+	auto px = p->getX();
+	auto py = p->getY();
+	setBounds(px + x * w - 4.0f, y * h - 4.0f, 8, 8);
 }
 
 

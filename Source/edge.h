@@ -14,6 +14,7 @@
 #include "utils.h"
 #include <algorithm>
 
+struct NodeList;
 const int VALUES_PER_CURVE_POINT = 4;
 
 struct CurvePoint : juce::Point<float>
@@ -44,29 +45,42 @@ struct Edge : public Component
 
 		void setPosition()
 		{
-			setBoundsRelative(x - radius, y - radius, radius * 2, radius * 2);
+			auto w = path->getWidth();
+			auto h = path->getHeight();
+			auto px = path->getX();
+			auto py = path->getY();
+			setBounds(px + x * w - 4.0f, y * h - 4.0f, 8, 8);
+
 		}
+
+		void mouseDown(const MouseEvent& event) override
+		{
+			current = value;
+		};
 
 		void mouseDrag(const MouseEvent& event) override
 		{
-			juce::Point<int> mouse = getParentComponent()->getMouseXYRelative();
-			float mouseY = (float)mouse.getY() / getParentHeight();
-			relY = std::clamp(mouseY, 0.0f, 1.0f);
+			auto distance = (float)event.getDistanceFromDragStartY() / getParentHeight();
 			auto Dy = path->end->y - path->start->y;
-			setPosition();
+			value = (Dy >= 0)
+				? std::clamp(current + distance, 0.0f, 1.0f)
+				: std::clamp(current -distance, 0.0f, 1.0f);
 			path->generatePlot();
-		};
+		}
 
-		float relY = 0.5;
+		float value = 0.5;
 		float x;
 		float y;
 		float radius = POINT_RADIUS;
 		bool isSelected = false;
 		Edge* path;
+
+	private:
+		float current;
 	};
 
 
-	Edge(Node& start, Node& end);
+	Edge(NodeList& nodeList, Node& start, Node& end);
 	int widthToArrayLength(float Dx) const;
 	void setControlPoints();
 	void generatePlot();
@@ -84,4 +98,9 @@ struct Edge : public Component
 	Node* end;
 	Array<float> plot;
 	Array<std::shared_ptr<CurvePoint>> curvePoints;
+
+private:
+	void setCurvePoints();
+	void updateCtrlParam();
+	NodeList* nodeList;
 };

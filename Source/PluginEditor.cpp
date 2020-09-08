@@ -24,7 +24,7 @@ void Editor::connectLFOCallback()
 	processor->lfo->callback = [&](int index)
 	{
 		float position = (float)index / LFORES;
-		ui->plot.playhead.setPosition(position);
+		ui->plot->playhead.setPosition(position);
 	};
 }
 

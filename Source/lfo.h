@@ -17,6 +17,8 @@
 #include <math.h>
 #include <functional>
 
+#include "utils.h"
+
 inline AudioPlayHead::CurrentPositionInfo playheadPosition;
 inline double bpm = 128;
 static const int LFORES = 1024;
@@ -119,11 +121,12 @@ public:
 		double outVal = std::clamp(lfoVal, 0.0, 1.0);
 		//Logger::writeToLog(juce::String(outVal));
 		endPoint->setValue(outVal);
+		dbg(lfoVal);
 	}
 
 	int minInterval = 1000;
 	double speed = 1.0;
-	std::array<double, LFORES> plot;
+	std::array<float, LFORES> plot;
 	AudioProcessorParameter* endPoint;
 	bool noteOn = false;
 	enum { free, oneShot, hold, sync }modes;
