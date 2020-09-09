@@ -5,6 +5,8 @@
 #include "controlbox.h"
 #include "mode-button.h"
 
+const int CTRL_HEIGHT = 50;
+
 class UI :public Component
 {
 public:
@@ -41,8 +43,8 @@ public:
 
 	void resized() override
 	{
-		plot->setBoundsRelative(0, 0, 1, 0.75f);
-		controls.setBoundsRelative(0, 0.75f, 1, 0.25f);
+		plot->setBounds(0, 0, getWidth(), getHeight()-CTRL_HEIGHT);
+		controls.setBounds(0, getHeight()-CTRL_HEIGHT, getWidth(), CTRL_HEIGHT);
 	};
 
 	UPtr<Plot> plot;

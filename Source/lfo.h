@@ -46,40 +46,62 @@ public:
 			std::chrono::steady_clock::time_point startTime = std::chrono::high_resolution_clock::now();
 			std::thread proc([this, startTime]()
 				{
-					while (mode == free)
+					//runningThreads++;
+					//while (runningThreads > 1) {}
+					currentIndex = 0;
+					while (mode == free && runningThreads < 2)
 					{
 						process(startTime);
 						std::this_thread::sleep_for(std::chrono::microseconds(minInterval));
 					}
+					//runningThreads--;
 				});
 			proc.detach();
 		}
 	}
 
-	//NEXT:: Fix 1 shot Mode
 	void trigger(bool isNoteOn)
 	{
-		std::chrono::steady_clock::time_point startTime = std::chrono::high_resolution_clock::now();
-		if (mode == oneshot) {
-			std::thread proc([this, startTime]()
+		//startTime = std::chrono::high_resolution_clock::now();
+		if (mode == oneshot && isNoteOn) {
+			startTime = std::chrono::high_resolution_clock::now();
+			std::thread proc([this]()
 				{
-					for (int i = 0; i < LFORES; ++i)
+					//runningThreads++;
+					//while (runningThreads > 1) {}
+					//currentIndex = 0;
+					double microSecondsPerBeat = (60.0 / bpm) * 1000000;
+					double barLength = microSecondsPerBeat * 4;
+					auto playDuration = barLength * speed;
+
+					auto microsecondsElapsed = 0;
+
+					while (microsecondsElapsed < playDuration && runningThreads < 2)
 					{
+						auto elapsedTime = std::chrono::high_resolution_clock::now() - startTime;
+						microsecondsElapsed = (float)elapsedTime.count() / 1000;
 						process(startTime);
 						std::this_thread::sleep_for(std::chrono::microseconds(minInterval));
 					}
+					//runningThreads--;
 				});
 			proc.detach();
 		}
 		else if (mode == latch) {
+			startTime = std::chrono::high_resolution_clock::now();
 			noteOn = isNoteOn;
-			std::thread proc([this, startTime]()
+			std::thread proc([this]()
 				{
-					while (noteOn)
+					//runningThreads++;
+					//while (runningThreads > 1) {}
+					//currentIndex = 0;
+					while (noteOn && runningThreads < 2)
 					{
 						process(startTime);
 						std::this_thread::sleep_for(std::chrono::microseconds(minInterval));
 					}
+					//runningThreads--;
+					currentIndex = 0;
 				});
 			proc.detach();
 		}
@@ -118,4 +140,6 @@ public:
 	int mode = 0;
 	std::function<void(int)> callback;
 	int currentIndex = 0;
+	int runningThreads = 0;
+	std::chrono::steady_clock::time_point startTime;
 };
