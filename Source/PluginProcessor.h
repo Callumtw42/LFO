@@ -57,7 +57,7 @@ public:
 	void setStateInformation(const void* data, int sizeInBytes) override;
 
 	Level gain;
-	LFO* lfo;
+	UPtr<LFO> lfo;
 
 private:
 	//==============================================================================

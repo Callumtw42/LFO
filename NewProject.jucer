@@ -45,7 +45,9 @@
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="LFO" enablePluginBinaryCopyStep="1"
                        vst3BinaryLocation="C:\Users\callu\VST3"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="LFO" enablePluginBinaryCopyStep="0"
+        <CONFIGURATION isDebug="0" name="Release" targetName="LFO" enablePluginBinaryCopyStep="1"
+                       vst3BinaryLocation="C:\Users\callu\VST3"/>
+        <CONFIGURATION isDebug="1" name="Ableton" targetName="LFO" enablePluginBinaryCopyStep="1"
                        vst3BinaryLocation="C:\Users\callu\VST3"/>
       </CONFIGURATIONS>
       <MODULEPATHS>

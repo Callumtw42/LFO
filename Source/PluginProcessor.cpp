@@ -22,7 +22,7 @@ Processor::Processor()
 		.withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
 	),
-	lfo(new LFO(gain.getParameters()[0]))
+	lfo(std::make_unique<LFO>(gain.getParameters()[0]))
 #endif
 {
 }
