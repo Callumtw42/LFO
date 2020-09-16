@@ -1,10 +1,11 @@
 #include "PluginEditor.h"
 
+
 juce::String message;
 
 
-Editor::Editor(Processor& p)
-	: AudioProcessorEditor(&p), processor(&p), ui(new UI(p))
+ProcessorEditor::ProcessorEditor(AudioProcessor& p, LFO& lfo)
+	: AudioProcessorEditor(&p), processor(&p), lfo(&lfo), ui(std::make_unique<UI>(p, lfo))
 {
 	constrainer.setMinimumWidth(WIDTH);
 	constrainer.setMinimumHeight(HEIGHT);
@@ -12,24 +13,24 @@ Editor::Editor(Processor& p)
 	setResizable(true, true);
 
 	connectLFOCallback();
-	processor->lfo->start();
-	addAndMakeVisible(ui);
+	addAndMakeVisible(ui.get());
 	setSize(WIDTH, HEIGHT);
 }
 
-Editor::~Editor() { }
+ProcessorEditor::~ProcessorEditor() { }
 
-void Editor::connectLFOCallback()
+void ProcessorEditor::connectLFOCallback()
 {
-	processor->lfo->callback = [&](int index)
+	lfo->callback = [&](int index)
 	{
 		float position = (float)index / LFORES;
-		ui->plot->playhead.setPosition(position);
+		if (isShowing())
+			ui->plot->playhead.setPosition(position);
 	};
 }
 
 
-void Editor::resized()
+void ProcessorEditor::resized()
 {
 	ui->setBoundsRelative(0, 0, 1, 1);
 }

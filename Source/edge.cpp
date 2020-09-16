@@ -153,6 +153,7 @@ void Edge::paint(Graphics& g)
 		auto currentY = plot.getReference(i) * h;
 		g.fillEllipse(currentX, currentY, 2.0f, 2.0f);
 	}
+	
 	/*##############--DEBUGGING--####################
 	g.setColour(Colours::white);
 	g.fillRect(ctrl1.x * pw, ctrl1.y * h, 5.0f, 5.0f);

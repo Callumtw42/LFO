@@ -12,7 +12,7 @@
 #include <array>
 #include "soulpatch.h"
 #include "lfo.h"
-
+#include "c:/SOUL/include/soul/patch/helper_classes/soul_patch_Utilities.h"
 //==============================================================================
 /**
 */

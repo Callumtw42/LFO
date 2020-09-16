@@ -1,6 +1,5 @@
 #pragma once
 #include <JuceHeader.h>
-#include "PluginProcessor.h"
 #include "plot.h"
 #include "controlbox.h"
 #include "mode-button.h"
@@ -10,10 +9,10 @@ const int CTRL_HEIGHT = 50;
 class UI :public Component
 {
 public:
-	UI(Processor& processor) :
+	UI(AudioProcessor& processor, LFO& lfo) :
 		processor(&processor)
 	{
-		this->plot = std::make_unique<Plot>(processor.lfo->plot);
+		this->plot = std::make_unique<Plot>(lfo.plot);
 		addAndMakeVisible(plot.get());
 		addAndMakeVisible(controls);
 		controls.add(std::make_shared<Dial>(1, 16, 1, 8, [&](float value)
@@ -29,13 +28,13 @@ public:
 
 		controls.add(std::make_shared<Dial>(*speedValues, 2, [&](float value)
 			{
-				processor.lfo->speed = value;
+				lfo.speed = value;
 			}));
 
 		controls.add(std::make_shared<ModeButton>(
 			[&](float mode)
 			{
-				processor.lfo->setMode(mode);
+				lfo.setMode(mode);
 			}
 		));
 
@@ -43,12 +42,12 @@ public:
 
 	void resized() override
 	{
-		plot->setBounds(0, 0, getWidth(), getHeight()-CTRL_HEIGHT);
-		controls.setBounds(0, getHeight()-CTRL_HEIGHT, getWidth(), CTRL_HEIGHT);
+		plot->setBounds(0, 0, getWidth(), getHeight() - CTRL_HEIGHT);
+		controls.setBounds(0, getHeight() - CTRL_HEIGHT, getWidth(), CTRL_HEIGHT);
 	};
 
 	UPtr<Plot> plot;
 	Controls controls;
-	Processor* processor;
+	AudioProcessor* processor;
 };
 

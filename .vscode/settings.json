@@ -3,13 +3,19 @@
         {
             "match": "\\.soul*",
             "isAsync": true,
-            "cmd": "soul generate --graph --output=${workspaceRoot}\\Source\\soul\\graph\\graph.html ${workspaceRoot}\\Source\\soul\\SineSynth.soulpatch",
+            "cmd": "soul generate --graph --output=${workspaceRoot}\\Source\\soul\\graph\\graph.html ${workspaceRoot}\\Source\\soul\\Level.soulpatch",
             "event": "onFileChange"
         },
         {
             "match": "\\.soul*",
             "isAsync": true,
-            "cmd": "soul generate --cpp --output=${workspaceRoot}\\Source\\soulpatch.cpp ${workspaceRoot}\\Source\\soul\\SineSynth.soulpatch",
+            "cmd": "soul generate --juce-cpp --output=${workspaceRoot}\\Source\\soulpatch.cpp ${workspaceRoot}\\Source\\soul\\Level.soulpatch",
+            "event": "onFileChange"
+        },
+        {
+            "match": "\\.soul*",
+            "isAsync": true,
+            "cmd": "soul generate --juce-header --output=${workspaceRoot}\\Source\\soulpatch.h ${workspaceRoot}\\Source\\soul\\Level.soulpatch",
             "event": "onFileChange"
         }
     ],

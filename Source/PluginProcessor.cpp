@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "custom-patch-loader.h"
 #include "soulpatch.cpp"
 
 
@@ -22,7 +23,7 @@ Processor::Processor()
 		.withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
 	),
-	lfo(std::make_unique<LFO>(gain.getParameters()[0]))
+	lfo(std::make_unique<LFO>(/*gain.getParameters()[0])*/))
 #endif
 {
 }
@@ -162,8 +163,11 @@ void Processor::processBlock(juce::AudioBuffer<float>& audio, juce::MidiBuffer& 
 	auto totalNumOutputChannels = getTotalNumOutputChannels();
 
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+	{
 		audio.clear(i, 0, audio.getNumSamples());
+	}
 	gain.processBlock(audio, midi);
+
 }
 
 //==============================================================================
@@ -174,7 +178,8 @@ bool Processor::hasEditor() const
 
 juce::AudioProcessorEditor* Processor::createEditor()
 {
-	return new Editor(*this);
+	//return new ProcessorEditor(*this);
+	return nullptr;
 }
 
 //==============================================================================
@@ -191,9 +196,72 @@ void Processor::setStateInformation(const void* data, int sizeInBytes)
 	// whose contents will have been created by the getStateInformation() call.
 }
 
+struct SimpleEditor : AudioProcessorEditor
+{
+	SimpleEditor(AudioProcessor& p)
+		: AudioProcessorEditor(p), proc(&p)
+	{
+		setResizable(true, true);
+		setSize(300, 200);
+	}
+
+	void resized() override
+	{
+
+	};
+
+	void mouseDown(const MouseEvent& event) override
+	{
+		dbg(proc->getParameters().size());
+	};
+
+	void paint(Graphics& g) override
+	{
+		g.drawText("HELLO", 0, 0, getWidth(), getHeight(), Justification::centred);
+	};
+
+	AudioProcessor* proc;
+
+};
+
+struct Proc : public soul::patch::CustomPatchLoader<soul::patch::PatchLibraryDLL>
+{
+	using CustomPatchLoader::CustomPatchLoader;
+	void initialise(const char* patchPath)
+	{
+		this->lfo = std::make_unique<LFO>();
+		this->patchReady = [this]()
+		{
+			this->plugin->createCustomGUI = [this](soul::patch::SOULPatchAudioProcessor& p)
+			{
+				return new ProcessorEditor(p, *lfo.get());
+			};
+			dbg(this->plugin->getParameters().size());
+			lfo->setEndPoint(this->plugin->getParameters()[0]);
+			//lfo->start();
+		};
+		this->patchUpdating = [this]()
+		{
+			lfo->updateStartTime();
+			//std::this_thread::sleep_for(std::chrono::microseconds(lfo->minInterval));
+		};
+
+		this->setPatchURL(patchPath);
+
+	}
+
+	UPtr<LFO> lfo;
+
+};
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-	return new Processor();
+	using namespace soul::patch;
+	auto patchPath = "c:/users/callu/projects/juce-projects/LFO/source/soul/level.soulpatch";
+	auto* patchLoader = new Proc(PatchLibraryDLL());
+	patchLoader->initialise(patchPath);
+
+
+	return patchLoader;
 }

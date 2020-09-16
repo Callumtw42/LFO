@@ -8,7 +8,7 @@
  #error "This file is designed to be included inside a file in a JUCE project, so that the module headers have already been included before it"
 #endif
 
-#ifndef SOUL_HEADER_INCLUDED_141445920
+#ifndef SOUL_HEADER_INCLUDED_179600299
  #error "This file is designed to be included inside a file where its corresponding auto-generated header has already been included"
 #endif
 
@@ -26,10 +26,12 @@ public:
     ~SOUL_Level() = default;
 
     //==============================================================================
-    static constexpr uint32_t maxBlockSize = 512;
-    template <typename Type, int size> struct Vector;
-    template <typename Type, int size> struct FixedArray;
+    template <typename Type, int32_t size> struct Vector;
+    template <typename Type, int32_t size> struct FixedArray;
     template <typename Type> struct DynamicArray;
+
+    static constexpr uint32_t maxBlockSize  = 1024;
+    static constexpr uint32_t latency       = 0;
 
     static constexpr const char*  UID           = "callum.level";
     static constexpr const char*  name          = "Level";
@@ -58,8 +60,8 @@ public:
     struct _RenderStats;
     struct _SparseStreamStatus;
     struct _Event_in_f32_1;
-    struct _Stream_in_vec_2_f32_512;
-    struct _Stream_out_vec_2_f32_512;
+    struct _Stream_in_vec_2_f32_1024;
+    struct _Stream_out_vec_2_f32_1024;
     struct soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___State;
     struct soul__gain__DynamicGain___for__root__Level_gainProcessor___State;
     struct _State;
@@ -72,7 +74,7 @@ public:
 
     void init (double newSampleRate, int sessionID)
     {
-        memset (&state, 0, sizeof (state));
+        memset (reinterpret_cast<void*> (std::addressof (state)), 0, sizeof (state));
         sampleRate = newSampleRate;
         _initialise (state, sessionID);
         initialisedState = state;
@@ -177,9 +179,9 @@ public:
             buffer[static_cast<int> (i)] = frames[i];
     }
 
-    void setNextInputStreamSparseFrames_audioIn (Vector<float, 2> targetFrameValue, uint32_t numFramesToReachValue, float curveShape)
+    void setNextInputStreamSparseFrames_audioIn (Vector<float, 2> targetFrameValue, uint32_t numFramesToReachValue)
     {
-        _setSparseInputTarget_audioIn (state, targetFrameValue, (int32_t) numFramesToReachValue, curveShape);
+        _setSparseInputTarget_audioIn (state, targetFrameValue, (int32_t) numFramesToReachValue);
     }
 
     DynamicArray<const Vector<float, 2>> getOutputStreamFrames_audioOut()
@@ -208,8 +210,8 @@ public:
     {
         return
         {
-            { "volume",  "in:volume",  EndpointType::event,  "float32",    0, "{ \"label\": \"Volume\", \"min\": -85, \"max\": 6, \"init\": -6, \"step\": 1, \"unit\": \"dB\" }" },
-            { "audioIn", "in:audioIn", EndpointType::stream, "float32<2>", 2, ""                                                                                                 }
+            { "volume",  "in:volume",  EndpointType::event,  "float32",    0, "{ \"label\": \"Volume\", \"min\": -85, \"max\": 6, \"init\": -40.0, \"unit\": \"dB\" }" },
+            { "audioIn", "in:audioIn", EndpointType::stream, "float32<2>", 2, ""                                                                                       }
         };
     }
 
@@ -234,6 +236,11 @@ public:
         bool isAutomatable, isBoolean, isHidden;
         const char* group;
         const char* textValues;
+    };
+
+    struct Parameter
+    {
+        ParameterProperties properties;
         float currentValue;
         std::function<void(float)> applyValue;
 
@@ -251,10 +258,10 @@ public:
     private:
         float snapToLegalValue (float v) const
         {
-            if (step > 0)
-                v = minValue + step * std::floor ((v - minValue) / step + 0.5f);
+            if (properties.step > 0)
+                v = properties.minValue + properties.step * std::floor ((v - properties.minValue) / properties.step + 0.5f);
 
-            return v < minValue ? minValue : (v > maxValue ? maxValue : v);
+            return v < properties.minValue ? properties.minValue : (v > properties.maxValue ? properties.maxValue : v);
         }
     };
 
@@ -267,17 +274,29 @@ public:
     static constexpr bool      hasMIDIInput = false;
     static constexpr uint32_t  numParameters = 1;
 
-    std::vector<ParameterProperties> getParameterProperties()
+    static constexpr const ParameterProperties parameters[] =
+    {
+        {  "volume",  "volume",  "dB",  -85.0f,  6.0f,  0.006f,  -40.0f,  true,  false,  false,  "",  ""  }
+    };
+
+    static constexpr uint32_t numInputBuses  = 1;
+    static constexpr uint32_t numOutputBuses = 1;
+
+    static constexpr const AudioBus inputBuses[numInputBuses] = { { "audioIn", 2 } };
+
+    static constexpr const AudioBus outputBuses[numOutputBuses] = { { "audioOut", 2 } };
+
+    static std::vector<ParameterProperties> getParameterProperties()   { return { parameters,  parameters  + numParameters }; }
+    static std::vector<AudioBus> getInputBuses()                       { return { inputBuses,  inputBuses  + numInputBuses }; }
+    static std::vector<AudioBus> getOutputBuses()                      { return { outputBuses, outputBuses + numOutputBuses }; }
+
+    std::vector<Parameter> createParameterList()
     {
         return
         {
-            {  "volume",  "volume",  "dB",  -85.0f,  6.0f,  1.0f,  -6.0f,  true,  false,  false,  "",  "",  -6.0f,  [this] (float v) { addInputEvent_volume (v); }  }
+            {  parameters[0],  -40.0f,  [this] (float v) { addInputEvent_volume (v); }  }
         };
     }
-
-    std::vector<AudioBus> getInputBuses() const   { return { { "audioIn", 2 } }; }
-
-    std::vector<AudioBus> getOutputBuses() const   { return { { "audioOut", 2 } }; }
 
     //==============================================================================
     struct ZeroInitialiser
@@ -497,11 +516,11 @@ public:
             monoDest[i] = static_cast<DestFloatType> (source[i]);
     }
 
-    template <typename SourceFloatType, typename DestFloatType, int numChannels>
+    template <typename SourceFloatType, typename DestFloatType, int32_t numChannels>
     static inline void copyToInterleaved (Vector<DestFloatType, numChannels>* vectorDest, const SourceFloatType* const* sourceChannels, uint32_t sourceStartFrame, uint32_t numFrames)
     {
         for (uint32_t i = 0; i < numFrames; ++i)
-            for (uint32_t chan = 0; chan < numChannels; ++chan)
+            for (uint32_t chan = 0; chan < static_cast<uint32_t> (numChannels); ++chan)
                 vectorDest[i].elements[chan] = static_cast<DestFloatType> (sourceChannels[chan][sourceStartFrame + i]);
     }
 
@@ -514,11 +533,11 @@ public:
             dest[i] = static_cast<DestFloatType> (monoSource[i]);
     }
 
-    template <typename SourceFloatType, typename DestFloatType, int numChannels>
+    template <typename SourceFloatType, typename DestFloatType, int32_t numChannels>
     static inline void copyFromInterleaved (DestFloatType* const* destChannels, uint32_t destStartFrame, const Vector<SourceFloatType, numChannels>* vectorSource, uint32_t numFrames)
     {
         for (uint32_t i = 0; i < numFrames; ++i)
-            for (uint32_t chan = 0; chan < numChannels; ++chan)
+            for (uint32_t chan = 0; chan < static_cast<uint32_t> (numChannels); ++chan)
                 destChannels[chan][destStartFrame + i] = static_cast<DestFloatType> (vectorSource[i].elements[chan]);
     }
 
@@ -539,17 +558,17 @@ public:
         int32_t m_numFrames;
     };
 
-    struct _Stream_in_vec_2_f32_512
+    struct _Stream_in_vec_2_f32_1024
     {
-        FixedArray<Vector<float, 2>, 512> m_buffer;
+        FixedArray<Vector<float, 2>, 1024> m_buffer;
         Vector<float, 2> m_currentSparseValue, m_targetSparseValue, m_perFrameIncrement;
         int32_t m_numSparseFramesToRender, m_constantFilledFrames;
         bool m_sparseStreamActive;
     };
 
-    struct _Stream_out_vec_2_f32_512
+    struct _Stream_out_vec_2_f32_1024
     {
-        FixedArray<Vector<float, 2>, 512> m_buffer;
+        FixedArray<Vector<float, 2>, 1024> m_buffer;
     };
 
     struct soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___State
@@ -570,8 +589,8 @@ public:
         _RenderStats m__renderStats;
         _SparseStreamStatus m__sparseStreamStatus;
         _Event_in_f32_1 m__in_volume;
-        _Stream_in_vec_2_f32_512 m__in_audioIn;
-        _Stream_out_vec_2_f32_512 m__out_audioOut;
+        _Stream_in_vec_2_f32_1024 m__in_audioIn;
+        _Stream_out_vec_2_f32_1024 m__out_audioOut;
         soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___State m_smoothedGain_state;
         soul__gain__DynamicGain___for__root__Level_gainProcessor___State m_gainProcessor_state;
     };
@@ -612,18 +631,18 @@ public:
         soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___IO _4 = {};
         soul__gain__DynamicGain___for__root__Level_gainProcessor___IO _5 = {};
 
-        _2 = _internal___minInt32 (512, maxFrames);
+        _2 = _internal___minInt32 (1024, maxFrames);
         _updateRampingStreams (_state, _2);
         _state.m__frameCount = 0;
         _main_loop_check: { if (! (_state.m__frameCount < _2)) goto _exit; }
-        _main_loop_body: { _3 = _readFromStream_struct__Stream_in_vec_2_f32_512 (_state.m__in_audioIn, _state.m__frameCount);
+        _main_loop_body: { _3 = _readFromStream_struct__Stream_in_vec_2_f32_1024 (_state.m__in_audioIn, _state.m__frameCount);
                            _4 = ZeroInitialiser();
                            soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain__run (_state.m_smoothedGain_state, _4);
                            _5 = ZeroInitialiser();
                            _5.m__in_in = _3;
                            _5.m__in_gain = _4.m__out_gain;
                            soul__gain__DynamicGain___for__root__Level_gainProcessor__run (_state.m_gainProcessor_state, _5);
-                           _writeToStream_struct__Stream_out_vec_2_f32_512 (_state.m__out_audioOut, _state.m__frameCount, _5.m__out_out);
+                           _writeToStream_struct__Stream_out_vec_2_f32_1024 (_state.m__out_audioOut, _state.m__frameCount, _5.m__out_out);
                            _state.m__frameCount = _state.m__frameCount + 1;
                            goto _main_loop_check;
         }
@@ -649,12 +668,12 @@ public:
         soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___volume_f32 (_state.m_smoothedGain_state, event);
     }
 
-    FixedArray<Vector<float, 2>, 512>& _getInputFrameArrayRef_audioIn (_State& _state) noexcept
+    FixedArray<Vector<float, 2>, 1024>& _getInputFrameArrayRef_audioIn (_State& _state) noexcept
     {
         return _state.m__in_audioIn.m_buffer;
     }
 
-    void _setSparseStream_struct__Stream_in_vec_2_f32_512 (_Stream_in_vec_2_f32_512& streamState, const Vector<float, 2>& targetValue, int32_t framesToReachTarget) noexcept
+    void _setSparseStream_struct__Stream_in_vec_2_f32_1024 (_Stream_in_vec_2_f32_1024& streamState, const Vector<float, 2>& targetValue, int32_t framesToReachTarget) noexcept
     {
         float _2 = {};
         Vector<float, 2> rampFrames = {}, delta = {};
@@ -679,14 +698,14 @@ public:
         }
     }
 
-    void _setSparseInputTarget_audioIn (_State& _state, const Vector<float, 2>& targetValue, int32_t framesToReachTarget, float curveShape) noexcept
+    void _setSparseInputTarget_audioIn (_State& _state, const Vector<float, 2>& targetValue, int32_t framesToReachTarget) noexcept
     {
         if (_state.m__in_audioIn.m_sparseStreamActive) goto _block_1;
         _block_0: { _addRampingStream (_state.m__sparseStreamStatus, 1); }
-        _block_1: { _setSparseStream_struct__Stream_in_vec_2_f32_512 (_state.m__in_audioIn, targetValue, framesToReachTarget); }
+        _block_1: { _setSparseStream_struct__Stream_in_vec_2_f32_1024 (_state.m__in_audioIn, targetValue, framesToReachTarget); }
     }
 
-    FixedArray<Vector<float, 2>, 512>& _getOutputFrameArrayRef_audioOut (_State& state) noexcept
+    FixedArray<Vector<float, 2>, 1024>& _getOutputFrameArrayRef_audioOut (_State& state) noexcept
     {
         return state.m__out_audioOut.m_buffer;
     }
@@ -702,7 +721,7 @@ public:
     }
 
     //==============================================================================
-    void _renderSparseFrames_struct__Stream_in_vec_2_f32_512 (_Stream_in_vec_2_f32_512& stream, int32_t startFrame, int32_t framesToGenerate) noexcept
+    void _renderSparseFrames_struct__Stream_in_vec_2_f32_1024 (_Stream_in_vec_2_f32_1024& stream, int32_t startFrame, int32_t framesToGenerate) noexcept
     {
         int32_t writePos = {};
         Vector<float, 2> currentValue = {};
@@ -719,28 +738,28 @@ public:
         _exit_after_loop: { stream.m_currentSparseValue = currentValue; }
     }
 
-    bool _applySparseStreamData_struct__Stream_in_vec_2_f32_512 (_Stream_in_vec_2_f32_512& stream, int32_t numFrames) noexcept
+    bool _applySparseStreamData_struct__Stream_in_vec_2_f32_1024 (_Stream_in_vec_2_f32_1024& stream, int32_t numFrames) noexcept
     {
         int32_t rampFrames = {};
 
         rampFrames = 0;
         if (! (stream.m_sparseStreamActive == true)) goto _exitTrue;
         _check_stream_state: { if (! (stream.m_numSparseFramesToRender == 0)) goto _render_ramp; }
-        _no_frames_to_render: { if (stream.m_constantFilledFrames == 512) goto _rampComplete; }
+        _no_frames_to_render: { if (stream.m_constantFilledFrames == 1024) goto _rampComplete; }
         _add_fixed_value: { stream.m_currentSparseValue = stream.m_targetSparseValue;
                             stream.m_perFrameIncrement = ZeroInitialiser();
-                            _renderSparseFrames_struct__Stream_in_vec_2_f32_512 (stream, stream.m_constantFilledFrames, _internal___minInt32 (numFrames, 512 - stream.m_constantFilledFrames));
-                            stream.m_constantFilledFrames = stream.m_constantFilledFrames + _internal___minInt32 (numFrames, 512 - stream.m_constantFilledFrames);
+                            _renderSparseFrames_struct__Stream_in_vec_2_f32_1024 (stream, stream.m_constantFilledFrames, _internal___minInt32 (numFrames, 1024 - stream.m_constantFilledFrames));
+                            stream.m_constantFilledFrames = stream.m_constantFilledFrames + _internal___minInt32 (numFrames, 1024 - stream.m_constantFilledFrames);
                             goto _exit;
         }
         _render_ramp: { rampFrames = _internal___minInt32 (numFrames, stream.m_numSparseFramesToRender);
-                        _renderSparseFrames_struct__Stream_in_vec_2_f32_512 (stream, 0, rampFrames);
+                        _renderSparseFrames_struct__Stream_in_vec_2_f32_1024 (stream, 0, rampFrames);
                         stream.m_numSparseFramesToRender = stream.m_numSparseFramesToRender - rampFrames;
                         if (rampFrames == numFrames) goto _exit;
         }
         _fill_remainder: { stream.m_currentSparseValue = stream.m_targetSparseValue;
                            stream.m_perFrameIncrement = ZeroInitialiser();
-                           _renderSparseFrames_struct__Stream_in_vec_2_f32_512 (stream, rampFrames, numFrames - rampFrames);
+                           _renderSparseFrames_struct__Stream_in_vec_2_f32_1024 (stream, rampFrames, numFrames - rampFrames);
         }
         _exit: { return false; }
         _exitTrue: { return true; }
@@ -761,7 +780,7 @@ public:
 
         rampComplete = false;
         if (! (streamId == 1)) goto _exit;
-        _case_1: { rampComplete = _applySparseStreamData_struct__Stream_in_vec_2_f32_512 (_state.m__in_audioIn, framesToRender); }
+        _case_1: { rampComplete = _applySparseStreamData_struct__Stream_in_vec_2_f32_1024 (_state.m__in_audioIn, framesToRender); }
         _exit: { return rampComplete; }
     }
 
@@ -790,7 +809,7 @@ public:
         _exit: {}
     }
 
-    Vector<float, 2> _readFromStream_struct__Stream_in_vec_2_f32_512 (const _Stream_in_vec_2_f32_512& stream, int32_t readPos) noexcept
+    Vector<float, 2> _readFromStream_struct__Stream_in_vec_2_f32_1024 (const _Stream_in_vec_2_f32_1024& stream, int32_t readPos) noexcept
     {
         Vector<float, 2> _2 = {};
 
@@ -798,7 +817,7 @@ public:
         return _2;
     }
 
-    void _writeToStream_struct__Stream_out_vec_2_f32_512 (_Stream_out_vec_2_f32_512& stream, int32_t writePos, Vector<float, 2> value) noexcept
+    void _writeToStream_struct__Stream_out_vec_2_f32_1024 (_Stream_out_vec_2_f32_1024& stream, int32_t writePos, Vector<float, 2> value) noexcept
     {
         stream.m_buffer[writePos] = value;
     }
@@ -829,34 +848,34 @@ public:
 
     float soul__intrinsics___abs_specialised_1_f32 (float n) noexcept
     {
-        float _2 = {}, _3 = {}, _4 = {}, _T5 = {};
+        float _2 = {}, _3 = {}, _4 = {}, _T0 = {};
 
-        if (! (n < 0)) goto _ternary_false_5;
-        _ternary_true_5: { _2 = -n;
-                           _T5 = _2;
-                           goto _ternary_end_5;
+        if (! (n < 0)) goto _ternary_false_0;
+        _ternary_true_0: { _2 = -n;
+                           _T0 = _2;
+                           goto _ternary_end_0;
         }
-        _ternary_false_5: { _3 = n;
-                            _T5 = _3;
+        _ternary_false_0: { _3 = n;
+                            _T0 = _3;
         }
-        _ternary_end_5: { _4 = _T5;
+        _ternary_end_0: { _4 = _T0;
                           return _4;
         }
     }
 
     int32_t soul__intrinsics___max_specialised_2_i32_i32 (int32_t a, int32_t b) noexcept
     {
-        int32_t _2 = {}, _3 = {}, _4 = {}, _T6 = {};
+        int32_t _2 = {}, _3 = {}, _4 = {}, _T0 = {};
 
-        if (! (a > b)) goto _ternary_false_6;
-        _ternary_true_6: { _2 = a;
-                           _T6 = _2;
-                           goto _ternary_end_6;
+        if (! (a > b)) goto _ternary_false_0;
+        _ternary_true_0: { _2 = a;
+                           _T0 = _2;
+                           goto _ternary_end_0;
         }
-        _ternary_false_6: { _3 = b;
-                            _T6 = _3;
+        _ternary_false_0: { _3 = b;
+                            _T0 = _3;
         }
-        _ternary_end_6: { _4 = _T6;
+        _ternary_end_0: { _4 = _T0;
                           return _4;
         }
     }
@@ -870,7 +889,7 @@ public:
 
         _2 = soul__dBtoGain (targetDB);
         _state.m_targetGain = _2;
-        maxDelta = static_cast<float> (static_cast<float> ((1.0 / (sampleRate * 1.0)) / 0.009999999776482582));
+        maxDelta = static_cast<float> (static_cast<float> ((1.0 / (sampleRate * 1.0)) / 0));
         _3 = soul__intrinsics___abs_specialised_1_f32 (_state.m_targetGain - _state.m_currentGain);
         _4 = soul__intrinsics___max_specialised_2_i32_i32 (1, static_cast<int32_t> (_3 / static_cast<float> (maxDelta)));
         _state.m_remainingRampSamples = _4;
@@ -1014,8 +1033,8 @@ struct Level::Pimpl
     {
         if constexpr (GeneratedClass::numAudioInputChannels > 0)
         {
-            for (int i = 0; i < (int) GeneratedClass::numAudioInputChannels; ++i)
-                rc.inputChannels[i] = audio.getReadPointer (i);
+            for (int i = 0; i < static_cast<int> (GeneratedClass::numAudioInputChannels); ++i)
+                rc.inputChannels[static_cast<size_t> (i)] = audio.getReadPointer (i);
         }
     }
 
@@ -1030,7 +1049,7 @@ struct Level::Pimpl
         populateInputChannels (audio, rc);
 
         for (int i = 0; i < (int) GeneratedClass::numAudioOutputChannels; ++i)
-            rc.outputChannels[i] = outputBuffer.getWritePointer (i);
+            rc.outputChannels[static_cast<size_t> (i)] = outputBuffer.getWritePointer (i);
 
         rc.numFrames = (uint32_t) numFrames;
 
@@ -1080,6 +1099,7 @@ Level::Level()
    : juce::AudioPluginInstance (Pimpl::createBuses())
 {
     pimpl = std::make_unique<Pimpl> (*this);
+    setLatencySamples (static_cast<int> (Pimpl::GeneratedClass::latency));
     refreshParameterList();
 }
 
@@ -1171,35 +1191,35 @@ void Level::setNonRealtime (bool) noexcept                {}
 //==============================================================================
 struct Level::Parameter  : public juce::AudioProcessorParameterWithID
 {
-    Parameter (Level& owner, const Pimpl::GeneratedClass::ParameterProperties& p)
-        : AudioProcessorParameterWithID (p.UID, p.name),
-          properties (p),
-          textValues (parseTextValues (properties.textValues)),
-          range (properties.minValue, properties.maxValue, properties.step),
+    Parameter (Level& owner, const Pimpl::GeneratedClass::Parameter& p)
+        : AudioProcessorParameterWithID (p.properties.UID, p.properties.name),
+          param (p),
+          textValues (parseTextValues (param.properties.textValues)),
+          range (param.properties.minValue, param.properties.maxValue, param.properties.step),
           numDecimalPlaces (getNumDecimalPlaces (range)),
           numParametersNeedingUpdate (owner.pimpl->numParametersNeedingUpdate)
     {
-        currentFullRangeValue = properties.initialValue;
+        currentFullRangeValue = param.currentValue;
     }
 
     float currentFullRangeValue = 0;
     bool needsUpdate = false;
 
-    Pimpl::GeneratedClass::ParameterProperties properties;
+    Pimpl::GeneratedClass::Parameter param;
     const juce::StringArray textValues;
     const juce::NormalisableRange<float> range;
     const int numDecimalPlaces;
     std::atomic<uint32_t>& numParametersNeedingUpdate;
 
     juce::String getName (int maximumStringLength) const override    { return name.substring (0, maximumStringLength); }
-    juce::String getLabel() const override                           { return properties.unit; }
+    juce::String getLabel() const override                           { return param.properties.unit; }
     Category getCategory() const override                            { return genericParameter; }
     bool isDiscrete() const override                                 { return range.interval != 0; }
-    bool isBoolean() const override                                  { return properties.isBoolean; }
-    bool isAutomatable() const override                              { return properties.isAutomatable; }
+    bool isBoolean() const override                                  { return param.properties.isBoolean; }
+    bool isAutomatable() const override                              { return param.properties.isAutomatable; }
     bool isMetaParameter() const override                            { return false; }
     juce::StringArray getAllValueStrings() const override            { return textValues; }
-    float getDefaultValue() const override                           { return convertTo0to1 (properties.initialValue); }
+    float getDefaultValue() const override                           { return convertTo0to1 (param.properties.initialValue); }
     float getValue() const override                                  { return convertTo0to1 (currentFullRangeValue); }
     void setValue (float newValue) override                          { setFullRangeValue (convertFrom0to1 (newValue)); }
 
@@ -1221,7 +1241,7 @@ struct Level::Parameter  : public juce::AudioProcessorParameterWithID
 
     void sendUpdate()
     {
-        properties.setValue (currentFullRangeValue);
+        param.setValue (currentFullRangeValue);
     }
 
     bool sendUpdateIfNeeded()
@@ -1384,7 +1404,7 @@ void Level::refreshParameterList()
 
         void addParam (std::unique_ptr<Parameter> newParam)
         {
-            juce::String group (newParam->properties.group);
+            juce::String group (newParam->param.properties.group);
 
             if (group.isNotEmpty())
                 getOrCreateGroup (tree, {}, group).addChild (std::move (newParam));
@@ -1420,12 +1440,12 @@ void Level::refreshParameterList()
 
     ParameterTreeGroupBuilder treeBuilder;
 
-    for (auto& p : pimpl->processor.getParameterProperties())
+    for (auto& p : pimpl->processor.createParameterList())
     {
         auto param = std::make_unique<Parameter> (*this, p);
         allParameters.push_back (param.get());
 
-        if (p.isHidden)
+        if (p.properties.isHidden)
             hiddenParams.push_back (std::move (param));
         else
             treeBuilder.addParam (std::move (param));
@@ -1467,7 +1487,7 @@ juce::ValueTree Level::createCurrentState()
     for (auto& p : allParameters)
     {
         juce::ValueTree param (pimpl->ids.PARAM);
-        param.setProperty (pimpl->ids.id, p->properties.UID, nullptr);
+        param.setProperty (pimpl->ids.id, p->param.properties.UID, nullptr);
         param.setProperty (pimpl->ids.value, p->currentFullRangeValue, nullptr);
         state.addChild (param, -1, nullptr);
     }
@@ -1490,7 +1510,7 @@ void Level::applyLastState()
 {
     if (lastValidState.hasType (pimpl->ids.UID))
         for (auto& p : allParameters)
-            if (auto* value = lastValidState.getChildWithProperty (pimpl->ids.id, p->properties.UID).getPropertyPointer (pimpl->ids.value))
+            if (auto* value = lastValidState.getChildWithProperty (pimpl->ids.id, p->param.properties.UID).getPropertyPointer (pimpl->ids.value))
                 p->setFullRangeValue (*value);
 }
 

@@ -26,14 +26,19 @@ static const int LFORES = 1024;
 class LFO : Timer
 {
 public:
-	LFO(AudioProcessorParameter* endPoint)
-		:endPoint(endPoint)
+	LFO()
+		:endPoint(nullptr)
 	{
 		plot.fill(0);
 		Timer::startTimer(16);
 	};
 
 	~LFO() {};
+
+	void setEndPoint(AudioProcessorParameter* endPoint)
+	{
+		this->endPoint = endPoint;
+	}
 
 	void timerCallback() override
 	{
@@ -44,7 +49,8 @@ public:
 	{
 
 		if (mode == free) {
-			startTime = std::chrono::high_resolution_clock::now();
+			//startTime = std::chrono::high_resolution_clock::now();
+			updateStartTime();
 			std::thread proc([this]()
 				{
 					auto start = startTime.time_since_epoch().count();
@@ -60,7 +66,8 @@ public:
 
 		else if (mode == sync && playheadPosition.timeInSeconds > -1)
 		{
-			startTime = std::chrono::high_resolution_clock::now();
+			//startTime = std::chrono::high_resolution_clock::now();
+			updateStartTime();
 			//auto _this = ReferenceCountedObjectPtr<LFO>(this);
 			std::thread proc([this]()
 				{
@@ -80,7 +87,8 @@ public:
 	{
 
 		if (mode == oneshot && isNoteOn) {
-			startTime = std::chrono::high_resolution_clock::now();
+			//startTime = std::chrono::high_resolution_clock::now();
+			updateStartTime();
 			std::thread proc([this]()
 				{
 					auto start = startTime.time_since_epoch().count();
@@ -102,7 +110,8 @@ public:
 		}
 
 		else if (mode == latch) {
-			startTime = std::chrono::high_resolution_clock::now();
+			//startTime = std::chrono::high_resolution_clock::now();
+			updateStartTime();
 			noteOn = isNoteOn;
 			std::thread proc([this]()
 				{
@@ -118,6 +127,11 @@ public:
 		}
 	}
 
+	void updateStartTime()
+	{
+		startTime = std::chrono::high_resolution_clock::now();
+	}
+
 	bool isUpToDate(long long start)
 	{
 		return startTime.time_since_epoch().count() == start;
@@ -129,9 +143,9 @@ public:
 		double barLength = microSecondsPerBeat * 4;
 		auto elapsedTime =
 			playheadPosition.timeInSeconds * 1000000000;
-			//std::chrono::high_resolution_clock::now().time_since_epoch().count()
-			//+ playheadPosition.timeInSeconds * 1000000000
-			//- startTime.time_since_epoch().count();
+		//std::chrono::high_resolution_clock::now().time_since_epoch().count()
+		//+ playheadPosition.timeInSeconds * 1000000000
+		//- startTime.time_since_epoch().count();
 		double microsecondsElapsed = elapsedTime / 1000;
 		double barsElapsed = microsecondsElapsed / barLength;
 		double intervalsElapsed = barsElapsed / speed;
@@ -139,9 +153,15 @@ public:
 		int index = rounded % LFORES;
 		currentIndex = index;
 		double lfoVal = plot[index];
-		double outVal = std::clamp(lfoVal, 0.0, 1.0);
+		//double clamped = std::clamp(lfoVal, 0.0, 1.0);
+		//double outVal = lfoVal;
+		//double outVal = std::log(lfoVal);
+		//double outVal = std::sqrt(lfoVal);
+		auto dB = 20.0f * std::log10(lfoVal);
+		auto outVal = (std::clamp(dB, -40.0, 0.0) + 40) / 40;
+
 		endPoint->setValue(outVal);
-		dbg(lfoVal);
+		//dbg(outVal);
 	}
 
 	void process(std::chrono::steady_clock::time_point startTime)
@@ -156,9 +176,14 @@ public:
 		int index = rounded % LFORES;
 		currentIndex = index;
 		double lfoVal = plot[index];
-		double outVal = std::clamp(lfoVal, 0.0, 1.0);
+		//double outVal = lfoVal;
+		auto dB = 20.0f * std::log10(lfoVal);
+		auto outVal = (std::clamp(dB, -40.0, 0.0) + 40) / 40;
+		//double outVal = std::log(lfoVal);
+		//double outVal = std::sqrt(lfoVal);
+		//double outVal = 20.0f * std::log10(lfoVal);
 		endPoint->setValue(outVal);
-		dbg(lfoVal);
+		//dbg(outVal);
 	}
 
 	void setMode(int mode)
@@ -174,7 +199,7 @@ public:
 	bool noteOn = false;
 	enum { sync, oneshot, latch, free } modes;
 	int mode = 0;
-	std::function<void(int)> callback;
+	std::function<void(int)> callback = [](int i) {};
 	int currentIndex = 0;
 	std::chrono::steady_clock::time_point startTime;
 
