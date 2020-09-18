@@ -8,7 +8,6 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "soulpatch.cpp"
 
 
 Processor::Processor(const char* patchPath): CustomPatchLoader(soul::patch::PatchLibraryDLL(), patchPath)

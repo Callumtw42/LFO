@@ -6,9 +6,9 @@ processor LinearGain
 
     event in( float f)
     {
-        float dB = 20.0f * log10(f);
-        dbRel = (clmp(dB, -40.0f, 0.0f) + 40.0f) / 40.0f;
-        // redB = 
+        float targetdB = 20.0f * log10(f);
+        currentdB += slopeTo(targetdB);
+        gainOut = soul::dBtoGain(currentdB); 
     }
 
     float clmp(float val, float min, float max)
@@ -16,18 +16,30 @@ processor LinearGain
         return val > max ? max : val < min ? min : val;
     }
 
-    // float dB = 0.0f ;
-    // float gain = 0.0f;
-    // clamp<40> dBRange;
-    float dbRel;
+    float slopeTo(float target)
+    {
+        float Dy = target - currentdB;
+        float dx = processor.period;
+        //Dy / Dx = dy / dx
+
+        //Dy /dx = Dx / dy
+        float dy = 1; 
+        float Dx =  (dx * Dy) / dy;
+        return Dy;
+
+        // if (Dy > dy) return dy;
+        // else if (Dy < dy) return -dy;
+        // else return 0.0f;
+    }
+
+    float gainOut = 0.0f;
+    float currentdB = 0.0f;
 
     void run()
     {
         loop
         {
-            // dB = 20.0f * log10(in);
-            // gain = soul::dBtoGain (dB);
-            out << dbRel; 
+            out << gainOut; 
             advance();
         }
     }
@@ -38,7 +50,7 @@ processor LinearGain
 graph Level  [[ main ]]
 {
     // input smoothedGain.volume [[ label: "Volume", min: -40.0f, max: 0.0f, init: -40.0f, unit:"dB"]];
-    input event float gain [[ label: "Volume", min: 0.0f, max: 1.0f, init: 0.0f]];
+    input event float gain [[ label: "Volume", min: 0.0f, max: 1.0f, init: 0.0f, step: 1.0f / 1024]];
     input stream float<2> audioIn;
     output stream float<2> audioOut;
 
@@ -47,7 +59,7 @@ graph Level  [[ main ]]
     {
         smoothedGain = soul::gain::SmoothedGainParameter (0.01f);
         gainProcessor = soul::gain::DynamicGain (float<2>);
-        sine = soul::oscillator::Sine(float<2>, 30, 0.5f);
+        sine = soul::oscillator::Sine(float<2>, 100, 0.5f);
 
         linearGain = LinearGain;
     } 
@@ -55,10 +67,10 @@ graph Level  [[ main ]]
     connection
     {
         // linearGain.out -> smoothedGain;
-        // gain -> linearGain.in;
+        gain -> linearGain.in;
         // linearGain.out -> gainProcessor.gain;
-        // gain -> gainProcessor.gain;
-        smoothedGain.gain-> gainProcessor.gain; 
+        linearGain.out -> gainProcessor.gain; 
+        // smoothedGain.gain-> gainProcessor.gain; 
         audioIn -> gainProcessor.in;
         sine.out -> gainProcessor.in;
         gainProcessor.out -> audioOut; 

@@ -8,7 +8,7 @@
  #error "This file is designed to be included inside a file in a JUCE project, so that the module headers have already been included before it"
 #endif
 
-#ifndef SOUL_HEADER_INCLUDED_111672075
+#ifndef SOUL_HEADER_INCLUDED_491347665
  #error "This file is designed to be included inside a file where its corresponding auto-generated header has already been included"
 #endif
 
@@ -62,13 +62,13 @@ public:
     struct _Event_in_f32_1;
     struct _Stream_in_vec_2_f32_1024;
     struct _Stream_out_vec_2_f32_1024;
-    struct soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___State;
+    struct LinearGain___State;
     struct soul__gain__DynamicGain___for__root__Level_gainProcessor___State;
     struct soul__oscillator__Sine___for__root__Level_sine___State;
     struct _State;
-    struct soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___IO;
     struct soul__gain__DynamicGain___for__root__Level_gainProcessor___IO;
     struct soul__oscillator__Sine___for__root__Level_sine___IO;
+    struct LinearGain___IO;
     struct StringLiteral;
 
     //==============================================================================
@@ -212,8 +212,8 @@ public:
     {
         return
         {
-            { "gain",    "in:gain",    EndpointType::event,  "float32",    0, "{ \"label\": \"Volume\", \"min\": 0.0, \"max\": 1.0, \"init\": 0.0 }" },
-            { "audioIn", "in:audioIn", EndpointType::stream, "float32<2>", 2, ""                                                                     }
+            { "gain",    "in:gain",    EndpointType::event,  "float32",    0, "{ \"label\": \"Volume\", \"min\": 0.0, \"max\": 1.0, \"init\": 0.0, \"step\": 0.0009765625 }" },
+            { "audioIn", "in:audioIn", EndpointType::stream, "float32<2>", 2, ""                                                                                             }
         };
     }
 
@@ -278,7 +278,7 @@ public:
 
     static constexpr const ParameterProperties parameters[] =
     {
-        {  "gain",  "gain",  "",  0.0f,  1.0f,  0.001f,  0.0f,  true,  false,  false,  "",  ""  }
+        {  "gain",  "gain",  "",  0.0f,  1.0f,  0.0009765625f,  0.0f,  true,  false,  false,  "",  ""  }
     };
 
     static constexpr uint32_t numInputBuses  = 1;
@@ -573,11 +573,10 @@ public:
         FixedArray<Vector<float, 2>, 1024> m_buffer;
     };
 
-    struct soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___State
+    struct LinearGain___State
     {
         int32_t m__resumePoint, m__frameCount, m__arrayEntry, m__sessionID, m__processorId;
-        float m_targetGain, m_currentGain, m_increment;
-        int32_t m_remainingRampSamples;
+        float m_gainOut, m_currentdB;
     };
 
     struct soul__gain__DynamicGain___for__root__Level_gainProcessor___State
@@ -599,14 +598,9 @@ public:
         _Event_in_f32_1 m__in_gain;
         _Stream_in_vec_2_f32_1024 m__in_audioIn;
         _Stream_out_vec_2_f32_1024 m__out_audioOut;
-        soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___State m_smoothedGain_state;
+        LinearGain___State m_linearGain_state;
         soul__gain__DynamicGain___for__root__Level_gainProcessor___State m_gainProcessor_state;
         soul__oscillator__Sine___for__root__Level_sine___State m_sine_state;
-    };
-
-    struct soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___IO
-    {
-        float m__out_gain;
     };
 
     struct soul__gain__DynamicGain___for__root__Level_gainProcessor___IO
@@ -619,6 +613,11 @@ public:
     struct soul__oscillator__Sine___for__root__Level_sine___IO
     {
         Vector<float, 2> m__out_out;
+    };
+
+    struct LinearGain___IO
+    {
+        float m__out_out;
     };
 
     //==============================================================================
@@ -642,7 +641,7 @@ public:
     {
         int32_t _2 = {};
         Vector<float, 2> _3 = {};
-        soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___IO _4 = {};
+        LinearGain___IO _4 = {};
         soul__oscillator__Sine___for__root__Level_sine___IO _5 = {};
         soul__gain__DynamicGain___for__root__Level_gainProcessor___IO _6 = {};
 
@@ -652,12 +651,12 @@ public:
         _main_loop_check: { if (! (_state.m__frameCount < _2)) goto _exit; }
         _main_loop_body: { _3 = _readFromStream_struct__Stream_in_vec_2_f32_1024 (_state.m__in_audioIn, _state.m__frameCount);
                            _4 = ZeroInitialiser();
-                           soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain__run (_state.m_smoothedGain_state, _4);
+                           LinearGain__run (_state.m_linearGain_state, _4);
                            _5 = ZeroInitialiser();
                            soul__oscillator__Sine___for__root__Level_sine__run (_state.m_sine_state, _5);
                            _6 = ZeroInitialiser();
                            _6.m__in_in = _3 + _5.m__out_out;
-                           _6.m__in_gain = _4.m__out_gain;
+                           _6.m__in_gain = _4.m__out_out;
                            soul__gain__DynamicGain___for__root__Level_gainProcessor__run (_state.m_gainProcessor_state, _6);
                            _writeToStream_struct__Stream_out_vec_2_f32_1024 (_state.m__out_audioOut, _state.m__frameCount, _6.m__out_out);
                            _state.m__frameCount = _state.m__frameCount + 1;
@@ -671,10 +670,10 @@ public:
     void _initialise (_State& _state, int32_t sessionID) noexcept
     {
         _state.m__sessionID = sessionID;
-        _state.m_smoothedGain_state.m__arrayEntry = 0;
-        _state.m_smoothedGain_state.m__sessionID = _state.m__sessionID;
-        _state.m_smoothedGain_state.m__processorId = 1;
-        soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___initialise (_state.m_smoothedGain_state);
+        _state.m_linearGain_state.m__arrayEntry = 0;
+        _state.m_linearGain_state.m__sessionID = _state.m__sessionID;
+        _state.m_linearGain_state.m__processorId = 1;
+        LinearGain___initialise (_state.m_linearGain_state);
         _state.m_gainProcessor_state.m__arrayEntry = 0;
         _state.m_gainProcessor_state.m__sessionID = _state.m__sessionID;
         _state.m_gainProcessor_state.m__processorId = 2;
@@ -686,6 +685,7 @@ public:
 
     void _addInputEvent_gain_f32 (_State& _state, const float& event) noexcept
     {
+        LinearGain___in_f32 (_state.m_linearGain_state, event);
     }
 
     FixedArray<Vector<float, 2>, 1024>& _getInputFrameArrayRef_audioIn (_State& _state) noexcept
@@ -843,6 +843,34 @@ public:
     }
 
     //==============================================================================
+    float soul__dBtoGain (float decibels) noexcept
+    {
+        float _2 = {}, _3 = {}, _4 = {}, _T0 = {};
+
+        if (! (decibels > -100.0f)) goto _ternary_false_0;
+        _ternary_true_0: { _2 = std::pow (10.0f, decibels * 0.05f);
+                           _T0 = _2;
+                           goto _ternary_end_0;
+        }
+        _ternary_false_0: { _3 = 0;
+                            _T0 = _3;
+        }
+        _ternary_end_0: { _4 = _T0;
+                          return _4;
+        }
+    }
+
+    //==============================================================================
+    float soul__intrinsics___pow_specialised_2_f32_f32 (float a, float b) noexcept
+    {
+        return 0;
+    }
+
+    float soul__intrinsics___log10_specialised_1_f32 (float n) noexcept
+    {
+        return 0;
+    }
+
     float soul__intrinsics___sin_specialised_1_f32 (float n) noexcept
     {
         return 0;
@@ -868,37 +896,6 @@ public:
         _ternary_end_2: { _4 = _T2;
                           return _4;
         }
-    }
-
-    //==============================================================================
-    void soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain__run (soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___State& _state, soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___IO& _io) noexcept
-    {
-        float out_value_gain = {};
-        int32_t _2 = {}, _3 = {};
-
-        out_value_gain = 0;
-        if (! (_state.m_remainingRampSamples != 0)) goto _ifnot_0;
-        _if_0: { _2 = _state.m_remainingRampSamples;
-                 _3 = _2 - 1;
-                 _state.m_remainingRampSamples = _3;
-                 if (! (_3 == 0)) goto _ifnot_1;
-        }
-        _if_1: { _state.m_currentGain = _state.m_targetGain;
-                 goto _ifnot_0;
-        }
-        _ifnot_1: { _state.m_currentGain = _state.m_currentGain + _state.m_increment; }
-        _ifnot_0: { out_value_gain = out_value_gain + _state.m_currentGain;
-                    _state.m__resumePoint = 1;
-                    _io.m__out_gain = out_value_gain;
-        }
-    }
-
-    void soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___initialise (soul__gain__SmoothedGainParameter___for__root__Level_smoothedGain___State& _state) noexcept
-    {
-        _state.m_targetGain = 0;
-        _state.m_currentGain = 0;
-        _state.m_increment = 0;
-        _state.m_remainingRampSamples = 0;
     }
 
     //==============================================================================
@@ -937,8 +934,45 @@ public:
 
     void soul__oscillator__Sine___for__root__Level_sine___initialise (soul__oscillator__Sine___for__root__Level_sine___State& _state) noexcept
     {
-        _state.m_phaseIncrement = static_cast<float> (188.49555921538758 * (1.0 / (sampleRate * 1.0)));
+        _state.m_phaseIncrement = static_cast<float> (628.3185307179587 * (1.0 / (sampleRate * 1.0)));
         _state.m_gain = 0.5f;
+    }
+
+    //==============================================================================
+    void LinearGain___in_f32 (LinearGain___State& _state, float f) noexcept
+    {
+        float _2 = {}, targetdB = {}, _3 = {}, _4 = {};
+
+        _2 = std::log10 (f);
+        targetdB = 20.0f * _2;
+        _3 = LinearGain__slopeTo (_state, targetdB);
+        _state.m_currentdB = _state.m_currentdB + _3;
+        _4 = soul__dBtoGain (_state.m_currentdB);
+        _state.m_gainOut = _4;
+    }
+
+    float LinearGain__slopeTo (LinearGain___State& _state, float target) noexcept
+    {
+        float Dy = {};
+
+        Dy = target - _state.m_currentdB;
+        return Dy;
+    }
+
+    void LinearGain__run (LinearGain___State& _state, LinearGain___IO& _io) noexcept
+    {
+        float out_value_out = {};
+
+        out_value_out = 0;
+        out_value_out = out_value_out + _state.m_gainOut;
+        _state.m__resumePoint = 1;
+        _io.m__out_out = out_value_out;
+    }
+
+    void LinearGain___initialise (LinearGain___State& _state) noexcept
+    {
+        _state.m_gainOut = 0;
+        _state.m_currentdB = 0;
     }
 
     //==============================================================================

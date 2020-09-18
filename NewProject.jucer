@@ -24,10 +24,6 @@
           <FILE id="YR5Nsu" name="mode-button.h" compile="0" resource="0" file="Source/mode-button.h"/>
         </GROUP>
       </GROUP>
-      <GROUP id="{BD49491C-4C70-FC86-08F9-63BF7F591703}" name="SOUL">
-        <FILE id="YJihaT" name="soulpatch.cpp" compile="0" resource="0" file="Source/soulpatch.cpp"/>
-        <FILE id="ZFidrc" name="soulpatch.h" compile="0" resource="0" file="Source/soulpatch.h"/>
-      </GROUP>
       <FILE id="gqGW3F" name="utils.h" compile="0" resource="0" file="Source/utils.h"/>
       <FILE id="hn7sAe" name="lfo.h" compile="0" resource="0" file="Source/lfo.h"/>
       <FILE id="s2009e" name="PluginProcessor.cpp" compile="1" resource="0"
