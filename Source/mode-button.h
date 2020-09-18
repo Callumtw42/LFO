@@ -17,7 +17,7 @@ struct ModeButton : public Component
 	ModeButton(std::function<void(int)> callback)
 	{
 		this->callback = callback;
-		this->mode = LFO::sync;
+		this->mode = LFO::free;
 		callback(mode);
 		
 		colors[LFO::sync] = 0xff76FF00;
@@ -29,6 +29,7 @@ struct ModeButton : public Component
 		labels[LFO::oneshot] = "1shot";
 		labels[LFO::latch] = "latch";
 		labels[LFO::free] = "free";
+		callback(mode);
 	}
 	void paint(Graphics& g) override
 	{

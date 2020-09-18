@@ -143,9 +143,6 @@ public:
 		double barLength = microSecondsPerBeat * 4;
 		auto elapsedTime =
 			playheadPosition.timeInSeconds * 1000000000;
-		//std::chrono::high_resolution_clock::now().time_since_epoch().count()
-		//+ playheadPosition.timeInSeconds * 1000000000
-		//- startTime.time_since_epoch().count();
 		double microsecondsElapsed = elapsedTime / 1000;
 		double barsElapsed = microsecondsElapsed / barLength;
 		double intervalsElapsed = barsElapsed / speed;
@@ -153,14 +150,11 @@ public:
 		int index = rounded % LFORES;
 		currentIndex = index;
 		double lfoVal = plot[index];
-		//double clamped = std::clamp(lfoVal, 0.0, 1.0);
-		//double outVal = lfoVal;
-		//double outVal = std::log(lfoVal);
-		//double outVal = std::sqrt(lfoVal);
+		
 		auto dB = 20.0f * std::log10(lfoVal);
 		auto outVal = (std::clamp(dB, -40.0, 0.0) + 40) / 40;
 
-		endPoint->setValue(outVal);
+		endPoint->setValue(lfoVal);
 		//dbg(outVal);
 	}
 
@@ -168,7 +162,8 @@ public:
 	{
 		double microSecondsPerBeat = (60.0 / bpm) * 1000000;
 		double barLength = microSecondsPerBeat * 4;
-		auto elapsedTime = std::chrono::high_resolution_clock::now().time_since_epoch().count() - startTime.time_since_epoch().count();
+		auto elapsedTime =
+			std::chrono::high_resolution_clock::now().time_since_epoch().count() - startTime.time_since_epoch().count();
 		double microsecondsElapsed = elapsedTime / 1000;
 		double barsElapsed = microsecondsElapsed / barLength;
 		double intervalsElapsed = barsElapsed / speed;
@@ -176,13 +171,11 @@ public:
 		int index = rounded % LFORES;
 		currentIndex = index;
 		double lfoVal = plot[index];
-		//double outVal = lfoVal;
+		
 		auto dB = 20.0f * std::log10(lfoVal);
 		auto outVal = (std::clamp(dB, -40.0, 0.0) + 40) / 40;
-		//double outVal = std::log(lfoVal);
-		//double outVal = std::sqrt(lfoVal);
-		//double outVal = 20.0f * std::log10(lfoVal);
-		endPoint->setValue(outVal);
+		
+		endPoint->setValue(lfoVal);
 		//dbg(outVal);
 	}
 

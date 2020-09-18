@@ -6,12 +6,20 @@ processor LinearGain
 
     event in( float f)
     {
-        // dB = 20.0f * log10(f);
-        gain = f;
+        float dB = 20.0f * log10(f);
+        dbRel = (clmp(dB, -40.0f, 0.0f) + 40.0f) / 40.0f;
+        // redB = 
+    }
+
+    float clmp(float val, float min, float max)
+    {
+        return val > max ? max : val < min ? min : val;
     }
 
     // float dB = 0.0f ;
-    float gain = 0.0f;
+    // float gain = 0.0f;
+    // clamp<40> dBRange;
+    float dbRel;
 
     void run()
     {
@@ -19,7 +27,7 @@ processor LinearGain
         {
             // dB = 20.0f * log10(in);
             // gain = soul::dBtoGain (dB);
-            out << gain;
+            out << dbRel; 
             advance();
         }
     }
@@ -29,18 +37,19 @@ processor LinearGain
 
 graph Level  [[ main ]]
 {
-    input smoothedGain.volume [[ label: "Volume", min: -40.0f, max: 0.0f, init: -40.0f, unit:"dB"]];
-    // input event float gain [[ label: "Volume", min: -40.0f, max: 0.0f, init: -40.0f, step:0.00001, unit:"dB"]];
+    // input smoothedGain.volume [[ label: "Volume", min: -40.0f, max: 0.0f, init: -40.0f, unit:"dB"]];
+    input event float gain [[ label: "Volume", min: 0.0f, max: 1.0f, init: 0.0f]];
     input stream float<2> audioIn;
     output stream float<2> audioOut;
 
 
     let
     {
-        smoothedGain = soul::gain::SmoothedGainParameter (0.0f);
+        smoothedGain = soul::gain::SmoothedGainParameter (0.01f);
         gainProcessor = soul::gain::DynamicGain (float<2>);
-        sine = soul::oscillator::Sine(float<2>, 110, 0.5f);
-        // linearGain = LinearGain;
+        sine = soul::oscillator::Sine(float<2>, 30, 0.5f);
+
+        linearGain = LinearGain;
     } 
 
     connection
@@ -48,9 +57,10 @@ graph Level  [[ main ]]
         // linearGain.out -> smoothedGain;
         // gain -> linearGain.in;
         // linearGain.out -> gainProcessor.gain;
+        // gain -> gainProcessor.gain;
         smoothedGain.gain-> gainProcessor.gain; 
         audioIn -> gainProcessor.in;
-        // sine.out -> gainProcessor.in;
+        sine.out -> gainProcessor.in;
         gainProcessor.out -> audioOut; 
     }
 }

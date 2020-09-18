@@ -39,12 +39,13 @@ namespace soul
 		class CustomPatchLoader : public juce::AudioProcessor
 		{
 		public:
-			CustomPatchLoader(PatchLibrary&& library)
+			CustomPatchLoader(PatchLibrary&& library, const char* patchPath)
 				: patchLibrary(std::move(library))
 			{
 				enableAllBuses();
 				updatePatchName();
 				checkForSiblingPatch();
+				setPatchURL(patchPath);
 			}
 
 			~CustomPatchLoader() override
@@ -53,6 +54,17 @@ namespace soul
 				patchInstance = nullptr;
 			}
 
+			/**Perform any audio/midi processing here before it reaches the soul patch*/
+			virtual void preProcessBlock(juce::AudioBuffer<float>& audio, juce::MidiBuffer& midi) = 0;
+			
+			/**Called when the patch is loaded and ready to play. Good place set the plugin UI callback*/
+			virtual void patchReady() = 0;
+
+			/**Called when the soul code changes and needs to recompile. Here you should stop any processes that need access
+			 * to the soul patch and restart them in the patchReady method
+			 */
+			virtual void patchUpdating() = 0;
+			
 			//==============================================================================
 			/** Sets a new .soulpatch file or URL for the plugin to load. */
 			void setPatchURL(const std::string& newFileOrURL)
@@ -85,8 +97,10 @@ namespace soul
 				return plugin == nullptr || plugin->isBusesLayoutSupported(layouts);
 			}
 
+
 			void processBlock(juce::AudioBuffer<float>& audio, juce::MidiBuffer& midi) override
 			{
+				preProcessBlock(audio, midi);
 				if (plugin != nullptr && !isSuspended())
 				{
 					return plugin->processBlock(audio, midi);
@@ -297,8 +311,6 @@ namespace soul
 			};
 
 			std::unique_ptr<SOULPatchAudioProcessor> plugin;
-			std::function<void()> patchReady = []() {};
-			std::function<void()> patchUpdating = []() {};
 		private:
 			//==============================================================================
 			PatchLibrary patchLibrary;
