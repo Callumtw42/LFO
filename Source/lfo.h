@@ -154,7 +154,7 @@ public:
 		auto dB = 20.0f * std::log10(lfoVal);
 		auto outVal = (std::clamp(dB, -40.0, 0.0) + 40) / 40;
 
-		endPoint->setValue(lfoVal);
+		if(endPoint)endPoint->setValue(lfoVal);
 		//dbg(outVal);
 	}
 
@@ -175,7 +175,8 @@ public:
 		auto dB = 20.0f * std::log10(lfoVal);
 		auto outVal = (std::clamp(dB, -40.0, 0.0) + 40) / 40;
 		
-		endPoint->setValue(lfoVal);
+		//endPoint->setValue(lfoVal);
+		if(endPoint)endPoint->setValue(lfoVal);
 		//dbg(outVal);
 	}
 
