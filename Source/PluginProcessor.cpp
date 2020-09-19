@@ -79,6 +79,28 @@ void PluginProcessor::processBlock(AudioBuffer<float>& audio, MidiBuffer& midi)
 		bpm = playheadPosition.bpm;
 	}
 
+	for (MidiMessageMetadata data : midi)
+	{
+		int msgCount = 0;
+		if (data.numBytes < 4)
+		{
+			MidiMessage message = data.getMessage();
+			if (message.isNoteOn())
+			{
+				lastMessage.isNoteOn = true;
+				lastMessage.samplePosition = message.getTimeStamp();
+				lastMessage.mode = lfo->mode;
+				samplesElapsed = 0;
+			}
+			else if (message.isNoteOff())
+			{
+				lastMessage.isNoteOn = false;
+				lastMessage.samplePosition = message.getTimeStamp();
+				lastMessage.mode = lfo->mode;
+			}
+		}
+	}
+
 	auto numChannels = audio.getNumChannels();
 	auto sampleRate = getSampleRate();
 	auto blockSize = getBlockSize();
@@ -117,8 +139,15 @@ void PluginProcessor::processBlock(AudioBuffer<float>& audio, MidiBuffer& midi)
 		case LFO::sync:
 			index = calculateSync(samplesPerCycle);
 			break;
+		case LFO::oneshot:
+			index = calculateOneshot(samplesPerCycle, s, midi);
+			break;
+		case LFO::latch:
+			index = calculateLatch(samplesPerCycle, s, midi);
+			break;
 		default: index = 0;
 		}
+		lfo->currentIndex = index;
 
 		offset += freq / sampleRate;
 		for (int i = 0; i < audio.getNumChannels(); ++i)
@@ -147,14 +176,26 @@ int PluginProcessor::calculateSync(double samplesPerCycle)
 	return index;
 }
 
-int PluginProcessor::calculateOneshot(double samplesPerCycle)
+int PluginProcessor::calculateOneshot(double samplesPerCycle, int currentBlockPosition, MidiBuffer& midi)
 {
-	return 0;
+	if (samplesElapsed < samplesPerCycle && lastMessage.mode == lfo->mode)
+		samplesElapsed++;
+
+	auto samplePosition = std::fmod(samplesElapsed, samplesPerCycle);
+	auto relPosition = samplePosition / samplesPerCycle;
+	auto index = (int)std::floor(relPosition * LFORES);
+	return index;
 }
 
-int PluginProcessor::calculateLatch(double samplesPerCycle)
+int PluginProcessor::calculateLatch(double samplesPerCycle, int currentBlockPosition, MidiBuffer& midi)
 {
-	return 0;
+	if (lastMessage.isNoteOn) samplesElapsed++;
+	else samplesElapsed = 0;
+
+	auto samplePosition = std::fmod(samplesElapsed, samplesPerCycle);
+	auto relPosition = samplePosition / samplesPerCycle;
+	auto index = (int)std::floor(relPosition * LFORES);
+	return index;
 }
 
 

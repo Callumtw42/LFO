@@ -48,9 +48,19 @@ public:
 
 	int calculateFree(double samplesPerCycle);
 	int calculateSync(double samplesPerCycle);
-	int calculateOneshot(double samplesPerCycle);
-	int calculateLatch(double samplesPerCycle);
+	int calculateOneshot(double samplesPerCycle, int currentBlockPosition, MidiBuffer& midi);
+	int calculateLatch(double samplesPerCycle, int currentBlockPosition, MidiBuffer& midi);
+
+	struct LastMessage
+	{
+		bool isNoteOn;
+		double samplePosition;
+		int mode;
+	};
 
 	LFO* lfo;
 	int64 samplesElapsed = 0;
+	LastMessage lastMessage;
+	
+	
 };

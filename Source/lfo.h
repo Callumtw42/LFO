@@ -150,11 +150,11 @@ public:
 		int index = rounded % LFORES;
 		currentIndex = index;
 		double lfoVal = plot[index];
-		
+
 		auto dB = 20.0f * std::log10(lfoVal);
 		auto outVal = (std::clamp(dB, -40.0, 0.0) + 40) / 40;
 
-		if(endPoint)endPoint->setValue(lfoVal);
+		if (endPoint)endPoint->setValue(lfoVal);
 		//dbg(outVal);
 	}
 
@@ -171,19 +171,19 @@ public:
 		int index = rounded % LFORES;
 		currentIndex = index;
 		double lfoVal = plot[index];
-		
+
 		auto dB = 20.0f * std::log10(lfoVal);
 		auto outVal = (std::clamp(dB, -40.0, 0.0) + 40) / 40;
-		
+
 		//endPoint->setValue(lfoVal);
-		if(endPoint)endPoint->setValue(lfoVal);
+		if (endPoint)endPoint->setValue(lfoVal);
 		//dbg(outVal);
 	}
 
 	void setMode(int mode)
 	{
 		this->mode = mode;
-		if (mode == free || mode == sync) start();
+		if (endPoint != nullptr && (mode == free || mode == sync)) start();
 	}
 
 	int minInterval = 1000;
