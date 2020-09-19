@@ -14,21 +14,10 @@
 #include "c:/SOUL/include/soul/patch/helper_classes/soul_patch_Utilities.h"
 #include "custom-patch-loader.h"
 
-struct Processor : public soul::patch::CustomPatchLoader<soul::patch::PatchLibraryDLL>
-{
-	Processor(const char* patchPath);
-	void preProcessBlock(juce::AudioBuffer<float>& audio, juce::MidiBuffer& midi) override;
-	void patchReady() override;
-	void patchUpdating() override;
-
-	UPtr<LFO> lfo;
-
-};
-
-class PluginProcessor : public AudioProcessor
+class Processor : public AudioProcessor
 {
 public:
-	PluginProcessor();
+	Processor();
 	const String getName() const override;
 	void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override;
 	void releaseResources() override;
@@ -48,19 +37,23 @@ public:
 
 	int calculateFree(double samplesPerCycle);
 	int calculateSync(double samplesPerCycle);
-	int calculateOneshot(double samplesPerCycle, int currentBlockPosition, MidiBuffer& midi);
-	int calculateLatch(double samplesPerCycle, int currentBlockPosition, MidiBuffer& midi);
+	int calculateOneshot(double samplesPerCycle);
+	int calculateLatch(double samplesPerCycle);
+	void handleMidiMessages(MidiBuffer& midi);
+	void setBpm();
+	int calculateIndex(double samplesPerCycle, int currentBlockPosition);
+	double getSamplesPerCycle();
 
 	struct LastMessage
 	{
-		bool isNoteOn;
-		double samplePosition;
-		int mode;
+		int isNoteOn = false;
+		double samplePosition = 0;
 	};
 
 	LFO* lfo;
 	int64 samplesElapsed = 0;
 	LastMessage lastMessage;
-	
-	
+	bool triggered = false;
+
+
 };

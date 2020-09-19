@@ -8,7 +8,6 @@
   ==============================================================================
 */
 
-//static const int DEFAULT_TEMPO = 128;
 
 #pragma once
 #define _USE_MATH_DEFINES
@@ -49,7 +48,6 @@ public:
 	{
 
 		if (mode == free) {
-			//startTime = std::chrono::high_resolution_clock::now();
 			updateStartTime();
 			std::thread proc([this]()
 				{
@@ -66,9 +64,7 @@ public:
 
 		else if (mode == sync && playheadPosition.timeInSeconds > -1)
 		{
-			//startTime = std::chrono::high_resolution_clock::now();
 			updateStartTime();
-			//auto _this = ReferenceCountedObjectPtr<LFO>(this);
 			std::thread proc([this]()
 				{
 					auto start = startTime.time_since_epoch().count();
@@ -87,7 +83,6 @@ public:
 	{
 
 		if (mode == oneshot && isNoteOn) {
-			//startTime = std::chrono::high_resolution_clock::now();
 			updateStartTime();
 			std::thread proc([this]()
 				{
@@ -110,7 +105,6 @@ public:
 		}
 
 		else if (mode == latch) {
-			//startTime = std::chrono::high_resolution_clock::now();
 			updateStartTime();
 			noteOn = isNoteOn;
 			std::thread proc([this]()
@@ -155,7 +149,6 @@ public:
 		auto outVal = (std::clamp(dB, -40.0, 0.0) + 40) / 40;
 
 		if (endPoint)endPoint->setValue(lfoVal);
-		//dbg(outVal);
 	}
 
 	void process(std::chrono::steady_clock::time_point startTime)
@@ -175,9 +168,7 @@ public:
 		auto dB = 20.0f * std::log10(lfoVal);
 		auto outVal = (std::clamp(dB, -40.0, 0.0) + 40) / 40;
 
-		//endPoint->setValue(lfoVal);
 		if (endPoint)endPoint->setValue(lfoVal);
-		//dbg(outVal);
 	}
 
 	void setMode(int mode)
