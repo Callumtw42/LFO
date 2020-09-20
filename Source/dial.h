@@ -34,17 +34,17 @@ struct Dial : Component
 		addAndMakeVisible(valueString);
 	}
 
-	template<int L, typename T>
-	Dial(std::array<T, L>& values, int initIndex, std::function<void(float)>callback) :
+	template<typename T>
+	Dial(Array<T>& values, Array<String>& labels, int initIndex, std::function<void(float)>callback) :
 		callback(callback)
 	{
 		static_assert((std::is_same<T, float>::value || std::is_same<T, int>::value), "floats and integers only");
 		slider.setLookAndFeel(&style);
-		slider.setRange(0, L - 1, 1);
+		slider.setRange(0, values.size() - 1, 1);
 		slider.onValueChange = [&]()
 		{
 			int index = slider.getValue();
-			valueString.setText(String(values[index]));
+			valueString.setText(labels[index]);
 			this->callback(values[index]);
 		};
 		slider.setValue(initIndex);

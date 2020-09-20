@@ -62,6 +62,7 @@ void Edge::updateCtrlParam()
 	{
 		const int centreIndex = std::round(size / 2);
 		ctrlParam->y = plot.getReference(centreIndex);
+		//ctrlParam->y = ctrlParam->value;
 	}
 	else
 	{
@@ -130,12 +131,10 @@ std::shared_ptr<CurvePoint> Edge::cubicBezier(Node& p0, Point& p1, Point& p2, No
 
 void Edge::moveControlParam(float y)
 {
-	auto maxY = std::max(start->y, end->y);
-	auto minY = std::min(start->y, end->y);
-	auto clampY = std::clamp<float>(y, minY, maxY);
-	auto dy = end->y - start->y;
-	auto yInBounds = clampY - end->y;
-	ctrlParam->value = (-yInBounds * 2 / dy) - 1;
+	auto clampY = std::clamp<float>(y, getWidth(), getHeight());
+	//auto dy = end->y - start->y;
+	//auto yInBounds = clampY - end->y;
+	ctrlParam->value = (-clampY * 2 / getHeight()) - 1;
 	generatePlot();
 }
 
@@ -146,14 +145,34 @@ void Edge::paint(Graphics& g)
 	auto h = getHeight();
 	auto w = getWidth();
 	auto pw = getParentWidth();
+	auto maxY = std::max(start->y, end->y);
+	auto minY = std::min(start->y, end->y);
 	g.setColour(GREEN);
-	for (int i = 0; i < plot.size(); ++i)
-	{
-		auto currentX = (float)i / plot.size() * w;
-		auto currentY = plot.getReference(i) * h;
-		g.fillEllipse(currentX, currentY, 2.0f, 2.0f);
+	auto startPoint = juce::Point<float>(start->x, start->y);
+	auto endPoint = juce::Point<float>(end->x, end->y);
+	auto ctrl1Point = juce::Point<float>(ctrl1.getX(), ctrl1.getY());
+	auto ctrl2Point = juce::Point<float>(ctrl2.getX(), ctrl2.getY());
+
+	if (start->y == end->y)
+		g.fillRect(0.0f, minY * getHeight(), (float)getWidth(), 1.0f);
+	else if (start->x == end->x)
+		g.fillRect(0.0f, minY * getHeight(), 1.0f, (maxY-minY) * getHeight());
+	else {
+		auto path = Path();
+		path.startNewSubPath(startPoint);
+		path.cubicTo(ctrl1Point, ctrl2Point, endPoint);
+		path.scaleToFit(0, minY * getHeight(), getWidth(), (maxY - minY) * getHeight(), false);
+		auto strokeType = PathStrokeType(1);
+		g.strokePath(path, strokeType);
 	}
-	
+
+	//for (int i = 0; i < plot.size(); ++i)
+	//{
+	//	auto currentX = (float)i / plot.size() * w;
+	//	auto currentY = plot.getReference(i) * h;
+	//	g.fillEllipse(currentX, currentY, 2.0f, 2.0f);
+	//}
+
 	/*##############--DEBUGGING--####################
 	g.setColour(Colours::white);
 	g.fillRect(ctrl1.x * pw, ctrl1.y * h, 5.0f, 5.0f);
@@ -171,7 +190,11 @@ void Edge::resized()
 
 void Edge::updatePosition()
 {
-	setBoundsRelative(start->x, 0.0f, end->x - start->x, 1.0f);
+	auto minY = std::min(start->y, end->y);
+	auto maxY = std::max(start->y, end->y);
+	setBoundsRelative(start->x, 0, end->x - start->x, 1);
+	if (start->x == end->x)setSize(getWidth() + 1, getHeight());
+	if (start->y == end->y)setSize(getWidth(), getHeight() + 1);
 }
 
 void Edge::mouseDoubleClick(const MouseEvent& event)

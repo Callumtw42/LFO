@@ -20,7 +20,7 @@
 
 inline AudioPlayHead::CurrentPositionInfo playheadPosition;
 inline double bpm = 128;
-static const int LFORES = 1024;
+static const int LFORES = 4096;
 
 class LFO : Timer
 {

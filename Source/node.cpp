@@ -140,7 +140,6 @@ void Node::mouseDrag(const MouseEvent& event)
 bool Node::keyPressed(const KeyPress& key)
 {
 	//if (key.getModifiers().isAltDown())
-	dbg("HELLO");
 	return true;
 }
 

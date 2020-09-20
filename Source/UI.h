@@ -21,12 +21,24 @@ public:
 				plot->repaint();
 			}));
 
-		std::array<float, (int)9>* speedValues = new std::array<float, 9>({
+		auto speedValues = new Array<float>({
+			32.0f, 16.0f, 8.0f,
 			4.0f ,2.0f, 1.0f,
 			1.0f / 2, 1.0f / 4,1.0f / 8,
-		1.0f / 16, 1.0f / 32, 1.0f / 64 });
+			1.0f / 16, 1.0f / 32, 1.0f / 64,
+			1.0f/128, 1.0f/256, 1.0f / 512
+			});
 
-		controls.add(std::make_shared<Dial>(*speedValues, 2, [&](float value)
+		auto labels = new Array<String>({
+					"32", "16", "8",
+					"4", "2", "1",
+					"1/2", "1/4", "1/8",
+					"1/16", "1/32", "1/64",
+					"1/128", "1/256", "fast",
+			
+			});
+
+		controls.add(std::make_shared<Dial>(*speedValues, *labels, 7, [&](float value)
 			{
 				lfo.speed = value;
 			}));

@@ -64,7 +64,7 @@ struct Edge : public Component
 			auto Dy = path->end->y - path->start->y;
 			value = (Dy >= 0)
 				? std::clamp(current + distance, 0.0f, 1.0f)
-				: std::clamp(current -distance, 0.0f, 1.0f);
+				: std::clamp(current - distance, 0.0f, 1.0f);
 			path->generatePlot();
 		}
 
