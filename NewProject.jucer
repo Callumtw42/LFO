@@ -26,13 +26,11 @@
       </GROUP>
       <FILE id="gqGW3F" name="utils.h" compile="0" resource="0" file="Source/utils.h"/>
       <FILE id="hn7sAe" name="lfo.h" compile="0" resource="0" file="Source/lfo.h"/>
-      <FILE id="s2009e" name="PluginProcessor.cpp" compile="1" resource="0"
-            file="Source/PluginProcessor.cpp"/>
-      <FILE id="VsRZc5" name="PluginProcessor.h" compile="0" resource="0"
-            file="Source/PluginProcessor.h"/>
       <FILE id="NNmflN" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="U21k8v" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="PA1cXF" name="Processor.cpp" compile="1" resource="0" file="Source/Processor.cpp"/>
+      <FILE id="bTYTPa" name="Processor.h" compile="0" resource="0" file="Source/Processor.h"/>
       <FILE id="i58RiF" name="custom-patch-loader.h" compile="0" resource="0"
             file="Source/custom-patch-loader.h"/>
     </GROUP>

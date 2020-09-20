@@ -11,6 +11,16 @@
 #include "node.h"
 #include "edge.h"
 #include "nodelist.h"
+#include "plot.h"
+
+float snap(float v, float oldMin, float oldMax, float newMin, float newMax)
+{
+	auto oldRange = oldMax - oldMin;
+	auto vRel = (v - oldMin) / oldRange;
+	auto newRange = newMax - newMin;
+	auto newVal = std::round(newRange * vRel) + newMin;
+	return newVal;
+}
 
 Node::Node(float x, float y, float radius, bool isBound)
 {
@@ -23,14 +33,34 @@ Node::Node(float x, float y, float radius, bool isBound)
 	this->leftNeighbour = nullptr;
 	this->rightNeighbour = nullptr;
 	this->path = nullptr;
+	setWantsKeyboardFocus(true);
 }
 
-void Node::move(int x, int y)
+Point<float> Node::snapToGrid(int x, int y, int gridRes)
 {
-	int clampY = std::clamp(y, 0, getParentHeight());
+	auto maxX = getParentWidth();
+	auto minX = 0;
+	auto snappedX = snap(x, minX, maxX, 0, gridRes);
+
+	auto maxY = getParentHeight();
+	auto minY = 0;
+	auto snappedY = snap(y, minY, maxY, 0, gridRes);
+
+	auto newX = snappedX / gridRes * maxX;
+	auto newY = snappedY / gridRes * maxY;
+
+	Point<float> out = Point(newX, newY);
+	return out;
+}
+
+void Node::move(int mouseX, int mouseY)
+{
+
+
+	int clampY = std::clamp(mouseY, 0, getParentHeight());
 	int clampX = (leftNeighbour && rightNeighbour)
-		? std::clamp(x, (int)(leftNeighbour->x * getParentWidth()), (int)(rightNeighbour->x * getParentWidth()))
-		: x;
+		? std::clamp((float)mouseX, (leftNeighbour->x * getParentWidth()), (rightNeighbour->x * getParentWidth()))
+		: mouseX;
 	if (isBound) {
 		setY(clampY);
 	}
@@ -91,11 +121,27 @@ void Node::createPath()
 	//repaint();
 }
 
+
 void Node::mouseDrag(const MouseEvent& event)
 {
 	Point<int> mouse = getParentComponent()->getMouseXYRelative();
-	move(mouse.getX(), mouse.getY());
-	//if (path) path->generatePlot();
+	if (event.mods.isAltDown())
+	{
+		move(mouse.getX(), mouse.getY());
+	}
+	else
+	{
+		auto* plot = dynamic_cast<Plot*>(getParentComponent()->getParentComponent());
+		auto snapped = snapToGrid(mouse.getX(), mouse.getY(), plot->gridRes);
+		move(snapped.getX(), snapped.getY());
+	}
+}
+
+bool Node::keyPressed(const KeyPress& key)
+{
+	//if (key.getModifiers().isAltDown())
+	dbg("HELLO");
+	return true;
 }
 
 void Node::mouseDoubleClick(const MouseEvent& event)

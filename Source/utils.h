@@ -24,5 +24,6 @@ void dbg(T v)
 	Logger::writeToLog(juce::String(v));
 }
 
+
 static const Colour GREEN = Colour(0xff77ff00);
 static const Colour GREY = Colour(0xff777777);

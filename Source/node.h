@@ -25,7 +25,9 @@ struct Node :public Component
 	void setX(int x);
 	void setY(int y);
 	void createPath();
-
+	Point<float> snapToGrid(int x, int y, int gridRes);
+	bool keyPressed(const KeyPress& key) override;
+	
 	std::unique_ptr<Edge> path;
 	Node* rightNeighbour;
 	Node* leftNeighbour;
@@ -36,4 +38,5 @@ struct Node :public Component
 	bool isBound;
 	int index = -1;
 };
+
 
