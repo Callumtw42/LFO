@@ -8,13 +8,13 @@ static const int HEIGHT = 200;
 class ProcessorEditor : public juce::AudioProcessorEditor, public juce::AudioProcessorParameter::Listener
 {
 public:
-	ProcessorEditor(AudioProcessor& p, LFO& lfo);
+	ProcessorEditor(Processor& p, LFO& lfo);
 	~ProcessorEditor() override;
 	void resized() override;
 	void parameterValueChanged(int parameterIndex, float newValue) override {};
 	void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {}
 	void connectLFOCallback();
-	AudioProcessor* processor;
+	Processor* processor;
 	LFO* lfo;
 	Label errorText;
 	ComponentBoundsConstrainer constrainer;

@@ -18,8 +18,7 @@ struct ModeButton : public Component
 	{
 		this->callback = callback;
 		this->mode = LFO::free;
-		callback(mode);
-		
+		callback(mode);	
 		colors[LFO::sync] = 0xff76FF00;
 		colors[LFO::oneshot] = 0xffFDFF58;
 		colors[LFO::latch] = 0xff46D7FF;

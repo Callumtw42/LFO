@@ -13,51 +13,26 @@
 
 struct Dial : Component
 {
-	template<typename T>
-	Dial(T min, T max, T step, T init, std::function<void(float)> callback) :
-		callback(callback)
+	Dial(RangedAudioParameter& param, std::function<void(float)> callback)
 	{
-		static_assert((std::is_same<T, float>::value || std::is_same<T, int>::value), "floats and integers only");
-
+		this->attachment = std::make_unique<SliderParameterAttachment>(param, this->slider);
+		this->callback = callback;
 		slider.setLookAndFeel(&style);
-		slider.setRange(min, max, step);
 		slider.onValueChange = [&]()
 		{
 			float value = slider.getValue();
-			valueString.setText(slider.getTextFromValue((T)value));
+			valueString.setText(slider.getTextFromValue(value));
 			this->callback(value);
 		};
-		slider.setValue(init);
-		callback(init);
 		addAndMakeVisible(slider);
-		valueString.setText(slider.getTextFromValue((T)slider.getValue()));
+		valueString.setText(slider.getTextFromValue(slider.getValue()));
 		addAndMakeVisible(valueString);
 	}
 
-	template<typename T>
-	Dial(Array<T>& values, Array<String>& labels, int initIndex, std::function<void(float)>callback) :
-		callback(callback)
-	{
-		static_assert((std::is_same<T, float>::value || std::is_same<T, int>::value), "floats and integers only");
-		slider.setLookAndFeel(&style);
-		slider.setRange(0, values.size() - 1, 1);
-		slider.onValueChange = [&]()
-		{
-			int index = slider.getValue();
-			valueString.setText(labels[index]);
-			this->callback(values[index]);
-		};
-		slider.setValue(initIndex);
-		callback(values[initIndex]);
-		addAndMakeVisible(slider);
-		valueString.setText(slider.getTextFromValue((T)slider.getValue()));
-		addAndMakeVisible(valueString);
-	};
-
 	void resized() override
 	{
-		width = getWidth();
-		height = getHeight();
+		auto width = getWidth();
+		auto height = getHeight();
 		slider.setSize(height, height);
 		valueString.setBoundingBox(Parallelogram<float>(
 			Rectangle<float>(
@@ -103,8 +78,7 @@ struct Dial : Component
 	};
 	Style style;
 	Slider slider = Slider(Slider::RotaryVerticalDrag, Slider::NoTextBox);
-	float width;
-	float height;
 	DrawableText valueString;
 	std::function<void(float)> callback;
+	UPtr<SliderParameterAttachment> attachment;
 };

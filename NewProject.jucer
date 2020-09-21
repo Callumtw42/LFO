@@ -7,6 +7,7 @@
   <MAINGROUP id="ALBpnJ" name="LFO">
     <GROUP id="{FB8980AF-43D1-B93A-DEFD-10951AF0CDE4}" name="Source">
       <GROUP id="{1A273DDC-0CB0-89F6-5F39-E8595A466825}" name="UI">
+        <FILE id="Rl4liM" name="UI.cpp" compile="1" resource="0" file="Source/UI.cpp"/>
         <FILE id="T0qqwN" name="UI.h" compile="0" resource="0" file="Source/UI.h"/>
         <GROUP id="{DDB5287F-FF86-5F9B-17CC-227E75F7F594}" name="Spline">
           <FILE id="tV0Ni7" name="edge.cpp" compile="1" resource="0" file="Source/edge.cpp"/>

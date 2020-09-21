@@ -15,6 +15,23 @@ Processor::Processor() : AudioProcessor(BusesProperties()
 	.withOutput("Output", juce::AudioChannelSet::stereo(), true))
 {
 	this->lfo = new LFO();
+
+	std::function <String(int index, int maxStringLength)> stringFromIndex =
+		[&](int index, int maxStringLength)
+	{
+		return  lfo->speedLabels[index];
+	};
+
+	std::function <int(const String&)> indexFromString =
+		[&](const String& choice)
+	{
+		return  lfo->speedLabels.indexOf(choice);
+	};
+
+	this->apvs = new AudioProcessorValueTreeState(*this, nullptr, Identifier("LFO"), {
+		std::make_unique<AudioParameterChoice>("speed", "speed", lfo->speedLabels, 7,String(), stringFromIndex, indexFromString),
+		std::make_unique<AudioParameterInt>("grid", "grid", 1, 16, 8)
+		});
 }
 
 void Processor::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock)
@@ -159,6 +176,23 @@ int Processor::calculateIndex(double samplesPerCycle, int currentBlockPosition)
 }
 AudioProcessorEditor* Processor::createEditor() { return new ProcessorEditor(*this, *lfo); }
 
+void Processor::getStateInformation(juce::MemoryBlock& destData)
+{
+	std::unique_ptr<XmlElement> xml(apvs->state.createXml());
+
+	if (xml != nullptr)
+		copyXmlToBinary(*xml, destData);
+}
+
+void Processor::setStateInformation(const void* data, int sizeInBytes)
+{
+	std::unique_ptr<XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
+
+	if (xml != nullptr)
+		apvs->state = ValueTree::fromXml(*xml);
+}
+
+
 const String Processor::getName() const { return "LFO"; }
 void Processor::releaseResources() { }
 double Processor::getTailLengthSeconds() const { return getTailLengthSeconds(); }
@@ -170,8 +204,6 @@ int Processor::getCurrentProgram() { return 0; }
 void Processor::setCurrentProgram(int index) { }
 const String Processor::getProgramName(int index) { return "LFO"; }
 void Processor::changeProgramName(int index, const String& newName) { }
-void Processor::getStateInformation(juce::MemoryBlock& destData) { }
-void Processor::setStateInformation(const void* data, int sizeInBytes) { }
 
 //==============================================================================
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

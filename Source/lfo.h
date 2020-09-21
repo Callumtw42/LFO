@@ -21,6 +21,7 @@
 inline AudioPlayHead::CurrentPositionInfo playheadPosition;
 inline double bpm = 128;
 static const int LFORES = 4096;
+const int INIT_SPEED = 1.0f / 4;
 
 class LFO : Timer
 {
@@ -30,6 +31,22 @@ public:
 	{
 		plot.fill(0);
 		Timer::startTimer(16);
+
+		speedValues = Array<float>({
+			32.0f, 16.0f, 8.0f,
+			4.0f ,2.0f, 1.0f,
+			1.0f / 2, 1.0f / 4,1.0f / 8,
+			1.0f / 16, 1.0f / 32, 1.0f / 64,
+			1.0f / 128, 1.0f / 256, 1.0f / 512
+			});
+
+		speedLabels = StringArray({
+			"32", "16", "8",
+			"4", "2", "1",
+			"1/2", "1/4", "1/8",
+			"1/16", "1/32", "1/64",
+			"1/128", "1/256", "fast",
+			});
 	};
 
 	~LFO() {};
@@ -187,5 +204,6 @@ public:
 	std::function<void(int)> callback = [](int i) {};
 	int currentIndex = 0;
 	std::chrono::steady_clock::time_point startTime;
-
+	Array<float> speedValues;
+	StringArray speedLabels;
 };

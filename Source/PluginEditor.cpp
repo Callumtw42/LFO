@@ -1,10 +1,11 @@
 #include "PluginEditor.h"
+#include "Processor.h"
 
 
 juce::String message;
 
 
-ProcessorEditor::ProcessorEditor(AudioProcessor& p, LFO& lfo)
+ProcessorEditor::ProcessorEditor(Processor& p, LFO& lfo)
 	: AudioProcessorEditor(&p), processor(&p), lfo(&lfo), ui(std::make_unique<UI>(p, lfo))
 {
 	constrainer.setMinimumWidth(WIDTH);

@@ -54,6 +54,6 @@ public:
 	int64 samplesElapsed = 0;
 	LastMessage lastMessage;
 	bool triggered = false;
-
+	AudioProcessorValueTreeState* apvs;
 
 };
