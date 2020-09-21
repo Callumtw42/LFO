@@ -9,7 +9,7 @@
 #include "Processor.h"
 #include "PluginEditor.h"
 
-
+//
 Processor::Processor() : AudioProcessor(BusesProperties()
 	.withInput("Input", juce::AudioChannelSet::stereo(), true)
 	.withOutput("Output", juce::AudioChannelSet::stereo(), true))
